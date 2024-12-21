@@ -4,6 +4,7 @@ import { Terminal } from "@xterm/xterm";
 import { AttachAddon } from "@xterm/addon-attach";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
+
 function TermComp() {
   const termRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {

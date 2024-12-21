@@ -1,15 +1,12 @@
-import dynamic from "next/dynamic";
+"use client";
 
-const TerminalComponent = dynamic(() => import("./terminal/terminal"), {
-  ssr: false,
-});
+import NavBar from "@/components/ui/NavBar";
+import { AnimatedBeamMultipleOutputDemo } from "@/components/AnimatedBeamMultiple";
+import { FaGoogle } from "react-icons/fa";
 
 function Home() {
-  return (
-    <div className="m-5">
-      <TerminalComponent />
-    </div>
-  );
+  return <main>Home Page</main>;
 }
 
 export default Home;
+
