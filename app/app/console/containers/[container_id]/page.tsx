@@ -5,7 +5,7 @@ function ContainerDetail() {
   return (
     <div
       style={{
-        height: "calc(100vh - 64px)",
+        height: "calc(100vh - 65px)",
         overflow: "auto",
       }}
       className="p-4 space-y-6"
