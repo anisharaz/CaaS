@@ -40,7 +40,7 @@ function ContainerDetailTabs() {
       </TabsList>
       <TabsContent value="details" className="w-full space-y-4 px-2 pt-2">
         <div className="text-2xl font-bold">Actions</div>
-        <div className="flex justify-between rounded-xl border-2 gap-14 py-2 px-4 items-center w-[700px] bg-gray-200 text-black dark:bg-zinc-900 dark:text-white">
+        <div className="flex flex-wrap gap-y-8 gap-4 p-5 md:p-4 justify-between rounded-xl border-2 md:gap-14 md:px-4 lg:items-center md:w-[700px] bg-gray-100 text-black dark:bg-zinc-900 dark:text-white">
           <div className="flex gap-2 cursor-pointer group hover:text-green-600">
             <span>Start</span>
             <Play />
@@ -53,7 +53,7 @@ function ContainerDetailTabs() {
             <span>Restart</span>
             <RotateCcw />
           </div>
-          <div className="flex gap-2 p-1 rounded-md cursor-pointer hover:text-red-500">
+          <div className="flex gap-2 cursor-pointer hover:text-red-500">
             <span>Delete</span>
             <Trash2 />
           </div>
@@ -93,9 +93,9 @@ function ContainerDetailTabs() {
           </div>
         </div>
       </TabsContent>
-      <TabsContent value="network_rules" className="pl-2">
+      <TabsContent value="network_rules" className="pl-2 space-y-4">
         <h1 className="text-2xl font-bold py-2">Inbound Rules</h1>
-        <div className="max-h-[400px] overflow-auto">
+        <div className="max-h-[400px] max-w-[90vw] overflow-auto">
           <Table>
             <TableHeader className="dark:bg-zinc-800 bg-muted">
               <TableRow className="text-md font-extrabold">

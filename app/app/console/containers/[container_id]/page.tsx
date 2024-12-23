@@ -10,7 +10,7 @@ function ContainerDetail() {
       }}
       className="p-4 space-y-6"
     >
-      <div className="rounded-lg flex gap-4">
+      <div className="rounded-lg md:flex md:flex-row gap-4 flex flex-col">
         <MemoryUsesChart />
         <CpuUsesChart />
       </div>

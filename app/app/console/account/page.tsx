@@ -1,11 +1,9 @@
-import { Separator } from "@/components/ui/separator";
-
 function Profile() {
   return (
-    <div className="m-6 space-y-4">
+    <div className="md:m-6 m-2 md:space-y-4 space-y-2">
       <div className="text-2xl font-bold">Account</div>
-      <div className="p-6 rounded-xl border-2 space-y-4">
-        <div className="grid space-x-10 grid-cols-2">
+      <div className="md:p-6 p-3 rounded-xl border-2 space-y-4 flex flex-col">
+        <div className="md:grid md:space-x-10 grid-cols-2 flex flex-col md:gap-4 gap-2">
           <div>
             <div className="font-bold">Account ID</div>
             <div>1256898-64s45d4sd-sds4</div>
@@ -15,7 +13,7 @@ function Profile() {
             <div>Anish Araz</div>
           </div>
         </div>
-        <div className="grid space-x-10 grid-cols-2">
+        <div className="md:grid md:space-x-10 grid-cols-2 flex flex-col gap-4">
           <div>
             <div className="font-bold">Email</div>
             <div>anisharaz123@gmail.com</div>
@@ -27,7 +25,7 @@ function Profile() {
         </div>
       </div>
       <div className="text-2xl font-bold">Billing</div>
-      <div className="space-y-4 p-6 rounded-xl border-2">
+      <div className="space-y-4 md:p-6 p-3 rounded-xl border-2">
         <div>
           <div className="font-bold">Billing ID</div>
           <div>1256898-64s45d4sd-sds4</div>

@@ -52,7 +52,7 @@ const chartConfig = {
 
 export function MemoryUsesChart() {
   return (
-    <Card className="w-1/3">
+    <Card className="w-full md:w-1/3">
       <CardHeader>
         <CardTitle>RAM Used</CardTitle>
       </CardHeader>

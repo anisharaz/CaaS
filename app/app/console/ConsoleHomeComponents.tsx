@@ -22,9 +22,11 @@ import Image from "next/image";
 
 export function ConsoleOptions() {
   return (
-    <div className="rounded-xl border-2">
-      <div className="text-2xl font-bold p-2 border-b-2">Services</div>
-      <div className="p-4 text-xl space-y-4">
+    <div className="rounded-xl border-2 mb-4 lg:m-0">
+      <div className="text-xl lg:text-2xl font-bold p-2 border-b-2">
+        Services
+      </div>
+      <div className="p-4 text-md md:text-xl space-y-4">
         <Link href={"/console/account"} className="flex gap-4 items-center">
           <Image
             src={"https://static.aaraz.me/caas/profile_logo.png"}
@@ -101,13 +103,53 @@ const invoices = [
     invoice: "INV001_INV001",
     totalAmount: "11.0.0.1",
   },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
+  {
+    invoice: "INV001_INV001",
+    totalAmount: "11.0.0.1",
+  },
 ];
 
 export function ConsoleContainers() {
   return (
     <div className="rounded-xl border-2">
       <div className="text-xl border-b-2 ">
-        <div className="text-2xl font-bold p-2">Container</div>
+        <div className="text-xl md:text-2xl font-bold p-2">Container</div>
         <div className="p-2 flex gap-2 items-center pb-4">
           <div>VPC</div>
           <Select defaultValue="default">
@@ -123,7 +165,7 @@ export function ConsoleContainers() {
           </Select>
         </div>
       </div>
-      <div className="h-[600px] overflow-auto">
+      <div className="md:h-[600px] max-h-[300px] md:max-h-[600px] overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>

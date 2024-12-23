@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 function ContainersPage() {
   const containers = [
     {
@@ -30,15 +31,15 @@ function ContainersPage() {
   return (
     <div
       style={{ height: "calc(100vh - 65px)" }}
-      className="overflow-auto p-6 space-y-4"
+      className="lg:overflow-auto md:p-6 p-2 space-y-4"
     >
-      <div className="text-2xl font-bold flex items-center justify-between">
+      <div className="text-2xl font-bold flex justify-between items-center">
         <div>Containers</div>
         <div>
           <CreateContainer />
         </div>
       </div>
-      <div className="p-6 space-y-4 border-2 rounded-xl">
+      <div className="md:p-6 p-2 space-y-4 border-2 rounded-xl">
         <div className="flex gap-2 items-center">
           <div>VPC</div>
           <Select defaultValue="default">
@@ -54,7 +55,7 @@ function ContainersPage() {
           </Select>
         </div>
         <Separator />
-        <div className="max-h-[600px] overflow-auto">
+        <div className="max-h-[600px] overflow-auto max-w-[90vw]">
           <Table>
             <TableHeader>
               <TableRow>
@@ -66,10 +67,12 @@ function ContainersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {containers.map((detail) => (
-                <TableRow key={detail.nick_name}>
-                  <TableCell className="font-medium">
-                    {detail.nick_name}
+              {containers.map((detail, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium  text-blue-600 underline underline-offset-2 hover:text-blue-700">
+                    <Link href={"containers/rand"} className="cursor-pointer">
+                      {detail.nick_name}
+                    </Link>
                   </TableCell>
                   <TableCell>
                     <Badge variant={"running"}>running</Badge>

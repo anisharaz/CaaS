@@ -22,7 +22,7 @@ const chartConfig = {
 
 export function CpuUsesChart() {
   return (
-    <Card className="w-1/3">
+    <Card className="w-full lg:w-1/3">
       <CardHeader>
         <CardTitle>CPU Used</CardTitle>
       </CardHeader>
