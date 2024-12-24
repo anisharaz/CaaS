@@ -9,11 +9,12 @@ async function main() {
         network: `15.0.${i}.0`,
         cidr: `15.0.${i}.0/24`,
         gateway: `15.0.${i}.1`,
+        used: false,
       });
     }
     return temp;
   }
-  await prisma.network.createMany({
+  await prisma.available_vpc.createMany({
     data: networkAddressGenerator(),
   });
 }

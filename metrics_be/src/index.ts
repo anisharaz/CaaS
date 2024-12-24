@@ -1,8 +1,16 @@
 import { createServer } from "http";
 import axios from "axios";
+import fs from "fs";
+import https from "https";
+
+const httpsAgent = new https.Agent({
+  cert: fs.readFileSync("/home/manish/docker-certs-local/cert.pem"),
+  key: fs.readFileSync("/home/manish/docker-certs-local/key.pem"),
+  ca: fs.readFileSync("/home/manish/docker-certs-local/ca.pem"),
+});
 
 const containerStatsEndpoint =
-  "http://localhost:2376/containers/e499260944cf4ea9a1ee0339b981cc571210594b64f3c191e9d22a6995674915/stats";
+  "https://localhost:2376/containers/e499260944cf4ea9a1ee0339b981cc571210594b64f3c191e9d22a6995674915/stats";
 
 const server = createServer(async (req, res) => {
   try {
@@ -10,7 +18,9 @@ const server = createServer(async (req, res) => {
       method: "GET",
       url: containerStatsEndpoint,
       responseType: "stream",
+      httpsAgent,
     });
+    console.log(incomingResponse);
 
     res.setHeader("Transfer-Encoding", "chunked");
 

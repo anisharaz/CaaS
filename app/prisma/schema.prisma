@@ -89,7 +89,7 @@ model Authenticator {
 
 // MODELS FOR APP ////////////////////////////////////////////////////////////////////////////
 model vpc {
-  id         String       @id @default(cuid())
+  id         String       @id
   vpc_name   String
   node       String
   network    String
@@ -138,4 +138,13 @@ model inbound_rules {
   userId           String
   containers       containers @relation(fields: [containersName], references: [name])
   containersName   String
+}
+
+model available_vpc {
+  id      String  @id @default(cuid())
+  node    String
+  cidr    String
+  network String
+  gateway String
+  used    Boolean
 }
