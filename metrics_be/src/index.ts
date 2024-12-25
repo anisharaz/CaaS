@@ -2,6 +2,11 @@ import { createServer } from "http";
 import axios from "axios";
 import fs from "fs";
 import https from "https";
+import { calculateStats } from "../utils/stats";
+import express from "express";
+
+const app = express();
+const server = createServer(app);
 
 const httpsAgent = new https.Agent({
   cert: fs.readFileSync("/home/manish/docker-certs-local/cert.pem"),
@@ -10,9 +15,9 @@ const httpsAgent = new https.Agent({
 });
 
 const containerStatsEndpoint =
-  "https://localhost:2376/containers/e499260944cf4ea9a1ee0339b981cc571210594b64f3c191e9d22a6995674915/stats";
+  "https://localhost:2376/containers/cb649cc6f112445402713748b5a/stats";
 
-const server = createServer(async (req, res) => {
+app.get("/", async (req, res) => {
   try {
     const incomingResponse = await axios({
       method: "GET",
@@ -20,28 +25,31 @@ const server = createServer(async (req, res) => {
       responseType: "stream",
       httpsAgent,
     });
-    console.log(incomingResponse);
 
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Transfer-Encoding", "chunked");
 
     const incomingStream = incomingResponse.data;
-    // readable.pipe(writable) - syntax
-    incomingStream.pipe(res);
 
+    incomingStream.on("data", (chunk: Buffer) => {
+      const stats = calculateStats(chunk);
+      res.write(JSON.stringify(stats));
+    });
+    incomingStream.on("end", () => {
+      res.end();
+    });
     incomingStream.on("error", (error: Error) => {
-      console.log("Error with incomingresponse", error);
-      res.writeHead(500);
-      res.end("Failed to fetch data from endpoint");
+      console.log("Error with incoming Response:", error);
+      res.status(500).send("Failed to fetch data");
     });
 
     req.on("close", () => {
       console.log("Client disconnected");
       incomingStream.destroy();
     });
-  } catch (error: unknown) {
-    console.error("Error in server", error);
-    res.writeHead(500);
-    res.end("Error in server");
+  } catch (error) {
+    console.error("Error in server:", error);
+    res.status(500).send("Error in server");
   }
 });
 

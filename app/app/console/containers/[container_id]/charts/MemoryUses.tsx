@@ -15,14 +15,59 @@ type ramUsesData = {
 
 export function MemoryUsesChart() {
   const [ramUses, setRamUses] = useState<ramUsesData>([]);
+  useEffect(() => {
+    const asyncFetch = async () => {
+      const response = await fetch("http://localhost:4000");
+      if (!response.body) {
+        console.error("No response body");
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let { done, value } = await reader.read();
+      while (!done) {
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split("\n")) {
+          if (line.trim()) {
+            try {
+              const parsedData = JSON.parse(line);
+              // console.log("Received data:", parsedData.memory_usage_percentage);
+
+              const memoryUsage =
+                parsedData.memory_usage_percentage === null
+                  ? 0
+                  : parsedData.memory_usage_percentage;
+
+              setRamUses((prev) => {
+                if (prev.length < 30) {
+                  return [
+                    ...prev,
+                    {
+                      RamUsedPercent: memoryUsage,
+                    },
+                  ];
+                } else {
+                  const array = prev.slice(1);
+                  array.push({ RamUsedPercent: memoryUsage });
+                  return array;
+                }
+              });
+            } catch (error) {
+              console.error("Failed to parse JSON chunk", error);
+            }
+          }
+        }
+        ({ done, value } = await reader.read());
+      }
+    };
+    asyncFetch();
+  }, [ramUses]);
 
   useEffect(() => {
-    (async function name() {
-      // const data = axios.get("/api/cpu-uses");
-    })().then(() => {
-      console.log("Streaming Metrics");
-    });
-  }, []);
+    console.log("Updated memory usage data:", ramUses);
+  }, [ramUses]);
 
   return (
     <Card className="w-full md:w-1/3">
