@@ -16,6 +16,15 @@ class ContainerReturnData(BaseModel):
     return_code: int
 
 
+class ContainerActions(BaseModel):
+    container_name: str
+    action: Literal["start", "stop", "restart"]
+
+
+class ContainerActionsReturnData(BaseModel):
+    return_code: int
+
+
 ########################################## Docker Network ##########################################
 class DockerNetworkData(BaseModel):
     network_name: str

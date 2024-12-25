@@ -5,6 +5,7 @@ from InfrastructureFunctions import (
     DeleteDockerNetwork,
     CreateNginxConfig,
     DeleteNginxConfig,
+    ActionsContainer,
 )
 from type import (
     ContainerData,
@@ -15,6 +16,8 @@ from type import (
     CreateNginxConfigReturnData,
     DeleteNginxConfigReturnData,
     DockerNetworkReturnData,
+    ContainerActions,
+    ContainerActionsReturnData,
 )
 
 from fastapi import FastAPI
@@ -25,6 +28,11 @@ app = FastAPI()
 @app.post("/container")
 async def create_container(container: ContainerData) -> ContainerReturnData:
     return CreateContainer(container)
+
+
+@app.post("/container_actions")
+async def ContainerActions(data: ContainerActions) -> ContainerActionsReturnData:
+    return ActionsContainer(data)
 
 
 @app.delete("/container")

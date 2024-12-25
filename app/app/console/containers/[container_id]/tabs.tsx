@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import InboundRulesRow from "./InboundRulesRow";
+import { AddInboundRule } from "./AddInboundRule";
 
 const configs = [
   {
@@ -94,15 +95,18 @@ function ContainerDetailTabs() {
         </div>
       </TabsContent>
       <TabsContent value="network_rules" className="pl-2 space-y-4">
-        <h1 className="text-2xl font-bold py-2">Inbound Rules</h1>
+        <div className="py-2 flex justify-between">
+          <h1 className="text-2xl font-bold ">Inbound Rules</h1>
+          <AddInboundRule />
+        </div>
         <div className="max-h-[400px] max-w-[90vw] overflow-auto">
           <Table>
             <TableHeader className="dark:bg-zinc-800 bg-muted">
               <TableRow className="text-md font-extrabold">
-                <TableHead>Config Name</TableHead>
+                <TableHead>Rule Name</TableHead>
                 <TableHead>Domain Name</TableHead>
                 <TableHead>Service Protocol</TableHead>
-                <TableHead>Internal IP</TableHead>
+                <TableHead>Container IP</TableHead>
                 <TableHead>Container Port</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>

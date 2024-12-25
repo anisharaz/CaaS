@@ -1,0 +1,22 @@
+- name: Container Actions
+  hosts: vm
+  tasks:
+    - name: Print the action type
+      ansible.builtin.debug:
+        msg: "Action: {{ action }}"
+    - name: Restart Container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        state: started
+        restart: true
+      when: action == 'restart'
+    - name: Stop container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        state: stopped
+      when: action == 'stop'
+    - name: Start container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        state: started
+      when: action == 'start'

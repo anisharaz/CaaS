@@ -1,7 +1,5 @@
 "use client";
-
 import { Area, AreaChart, CartesianGrid } from "recharts";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartConfig,
@@ -9,67 +7,51 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-const chartData = [
-  { month: "January", mobile: 100 },
-  { month: "February", mobile: 200 },
-  { month: "March", mobile: 120 },
-  { month: "April", mobile: 190 },
-  { month: "May", mobile: 130 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "May", mobile: 130 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "58:02", mobile: 140 },
-  { month: "January", mobile: 100 },
-  { month: "February", mobile: 200 },
-  { month: "March", mobile: 120 },
-  { month: "April", mobile: 190 },
-  { month: "May", mobile: 130 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-  { month: "June", mobile: 140 },
-];
+import { useEffect, useState } from "react";
 
-const chartConfig = {
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig;
+type ramUsesData = {
+  RamUsedPercent: number;
+}[];
 
 export function MemoryUsesChart() {
+  const [ramUses, setRamUses] = useState<ramUsesData>([]);
+
+  useEffect(() => {
+    (async function name() {
+      // const data = axios.get("/api/cpu-uses");
+    })().then(() => {
+      console.log("Streaming Metrics");
+    });
+  }, []);
+
   return (
     <Card className="w-full md:w-1/3">
       <CardHeader>
         <CardTitle>RAM Used</CardTitle>
       </CardHeader>
       <CardContent className="">
-        <ChartContainer config={chartConfig}>
-          <AreaChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
+        <ChartContainer
+          config={
+            {
+              RamUsedPercent: {
+                label: "RAM Used %",
+                color: "hsl(var(--chart-2))",
+              },
+            } satisfies ChartConfig
+          }
+        >
+          <AreaChart data={ramUses}>
+            <CartesianGrid />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="dot" />}
             />
             <Area
-              dataKey="mobile"
-              type="natural"
-              fill="var(--color-mobile)"
-              fillOpacity={0.4}
-              stroke="var(--color-mobile)"
+              dataKey="RamUsedPercent"
+              type="monotone"
+              fill="var(--color-RamUsedPercent)"
+              fillOpacity={0.3}
+              stroke="var(--color-RamUsedPercent)"
               stackId="a"
             />
           </AreaChart>

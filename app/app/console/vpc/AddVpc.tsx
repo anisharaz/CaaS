@@ -54,32 +54,13 @@ function AddVpc() {
               </Label>
               <div className="col-span-3 space-y-2">
                 <Input id="name" {...register("name")} />
-                {errors.name && (
-                  <div className="text-red-600">{errors.name.message}</div>
-                )}
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="cidr" className="text-right">
-                VPC CIDR <span className="text-red-600">*</span>
-              </Label>
-              <div className="col-span-3">
-                <Input id="cidr" {...register("cidr")} />
-                {errors.cidr && (
-                  <div className="text-red-600">{errors.cidr.message}</div>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="gateway" className="text-right">
-                VPC Gateway <span className="text-red-600">*</span>
-              </Label>
-              <div className="col-span-3">
-                <Input id="gateway" {...register("gateway")} />
-                {errors.gateway && (
-                  <div className="text-red-600">{errors.gateway.message}</div>
-                )}
-              </div>
+            <div className="text-sm text-amber-300 text-right">
+              {errors.name && (
+                <div className="text-red-600">{errors.name.message}</div>
+              )}
+              VPC CIDR will be allocated based on the availability
             </div>
           </div>
           <DialogFooter>

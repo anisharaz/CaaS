@@ -8,6 +8,8 @@ from type import (
     CreateNginxConfigReturnData,
     DeleteNginxConfigData,
     DeleteNginxConfigReturnData,
+    ContainerActions,
+    ContainerActionsReturnData,
 )
 
 
@@ -85,4 +87,14 @@ def DeleteContainer(ContainerData: ContainerData) -> ContainerReturnData:
         extravars=ContainerData.model_dump(),
     )
     ReturnData = ContainerReturnData(container_ip="None", return_code=res.rc)
+    return ReturnData
+
+
+def ActionsContainer(data: ContainerActions) -> ContainerActionsReturnData:
+    res: Runner = run(
+        private_data_dir=".",
+        playbook="container/container_actions.yaml",
+        extravars=data.model_dump(),
+    )
+    ReturnData = ContainerActionsReturnData(return_code=res.rc)
     return ReturnData

@@ -87,7 +87,7 @@ function InboundRulesRow({
                   <TableHeader>
                     <TableRow className="text-md font-extrabold">
                       <TableHead className="min-w-60">
-                        Config Name <sub>(edit)</sub>
+                        Rule Name <sub>(edit)</sub>
                       </TableHead>
                       <TableHead className="min-w-60">
                         Domain Name <sub>(edit)</sub>
