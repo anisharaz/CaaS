@@ -8,6 +8,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 type ramUsesData = {
   RamUsedPercent: number;
@@ -15,9 +16,12 @@ type ramUsesData = {
 
 export function MemoryUsesChart() {
   const [ramUses, setRamUses] = useState<ramUsesData>([]);
+  const { container_id } = useParams();
   useEffect(() => {
     const asyncFetch = async () => {
-      const response = await fetch("http://localhost:4000");
+      const response = await fetch(
+        `http://localhost:4000?container_id=${container_id}`
+      );
       if (!response.body) {
         console.error("No response body");
         return;

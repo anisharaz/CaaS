@@ -8,6 +8,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { useParams } from "next/navigation";
 
 const chartConfig = {
   mobile: {
@@ -21,10 +22,13 @@ type cpuUsesData = {
 }[];
 
 export function CpuUsesChart() {
+  const { container_id } = useParams();
   const [cpuUses, setCpuUses] = useState<cpuUsesData>([]);
   useEffect(() => {
     const asyncFetch = async () => {
-      const response = await fetch("http://localhost:4000");
+      const response = await fetch(
+        `http://localhost:4000?container_id=${container_id}`
+      );
       if (!response.body) {
         console.error("No response body");
         return;
