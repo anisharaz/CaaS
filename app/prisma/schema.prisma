@@ -93,7 +93,7 @@ model vpc {
   vpc_name   String
   node       String
   network    String
-  cidr       String
+  cidr       String // @unique
   gateway    String
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
