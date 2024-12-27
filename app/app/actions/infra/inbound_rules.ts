@@ -3,17 +3,18 @@ import prisma from "@/lib/db";
 import axios from "axios";
 import { inbound_rules_schema } from "@/lib/zod";
 import { INFRA_BE_URL } from "@/lib/vars";
+import { revalidatePath } from "next/cache";
 
 export async function createInboundRule({
   domain_name,
   container_port,
   config_name,
-  container_id,
+  container_name,
 }: {
   domain_name: string;
   container_port: number;
   config_name: string;
-  container_id: string;
+  container_name: string;
 }) {
   const userEmail = "xyz";
   try {
@@ -25,11 +26,12 @@ export async function createInboundRule({
     });
 
     if (!validation.success) {
-      return new Error(
-        `Validation failed: ${validation.error.errors
+      return {
+        success: false,
+        message: `Validation failed: ${validation.error.errors
           .map((err) => err.message)
-          .join(", ")}`
-      );
+          .join(", ")}`,
+      };
     }
 
     const user = await prisma.user.findUnique({
@@ -41,7 +43,7 @@ export async function createInboundRule({
     // get container details
     const container = await prisma.containers.findUnique({
       where: {
-        name: container_id,
+        name: container_name,
       },
     });
     // check if domain is already allocated
@@ -85,6 +87,7 @@ export async function createInboundRule({
         containersName: container?.name as string,
       },
     });
+    revalidatePath("/console/containers/[container_id]");
     return {
       success: true,
       message: "",
@@ -118,11 +121,12 @@ export async function editInboundRule({
       port: container_port,
     });
     if (!validation.success) {
-      return new Error(
-        `Validation failed: ${validation.error.errors
+      return {
+        success: false,
+        message: `Validation failed: ${validation.error.errors
           .map((err) => err.message)
-          .join(", ")}`
-      );
+          .join(", ")}`,
+      };
     }
 
     const user = await prisma.user.findUnique({
@@ -223,6 +227,7 @@ export async function deleteInboundRule({
         id: inbound_rule_id,
       },
     });
+    revalidatePath("/console/containers/[container_id]");
     return {
       success: true,
       message: "",

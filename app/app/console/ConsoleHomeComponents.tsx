@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -19,6 +18,7 @@ import {
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
+import ContainerStatusBadge from "@/components/ContainerStatusBadge";
 
 export function ConsoleOptions() {
   return (
@@ -82,66 +82,11 @@ export function ConsoleOptions() {
     </div>
   );
 }
-const invoices = [
+const container = [
   {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
-  },
-  {
-    invoice: "INV001_INV001",
-    totalAmount: "11.0.0.1",
+    container_name: "INV001",
+    container_nick_name: "INV001_INV001",
+    container_ip: "11.0.0.1",
   },
 ];
 
@@ -175,12 +120,16 @@ export function ConsoleContainers() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice.invoice}>
-                <TableCell className="font-medium">{invoice.invoice}</TableCell>
-                <TableCell className="">{invoice.totalAmount}</TableCell>
-                <TableCell className="text-right">
-                  <Badge variant={"running"}>running</Badge>
+            {container.map((container) => (
+              <TableRow key={container.container_name}>
+                <TableCell className="font-medium">
+                  {container.container_nick_name}
+                </TableCell>
+                <TableCell className="">{container.container_ip}</TableCell>
+                <TableCell className="flex justify-end text-right">
+                  <ContainerStatusBadge
+                    container_name={container.container_name}
+                  />
                 </TableCell>
               </TableRow>
             ))}

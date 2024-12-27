@@ -15,11 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import ContainerStatusBadge from "@/components/ContainerStatusBadge";
 function ContainersPage() {
   const containers = [
     {
+      container_name: "container1",
       nick_name: "Polar hunter",
       status: "running",
       node: "oracle_arm",
@@ -73,7 +74,9 @@ function ContainersPage() {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={"running"}>running</Badge>
+                    <ContainerStatusBadge
+                      container_name={detail.container_name}
+                    />
                   </TableCell>
                   <TableCell>{detail.node}</TableCell>
                   <TableCell>{detail.createdAt}</TableCell>

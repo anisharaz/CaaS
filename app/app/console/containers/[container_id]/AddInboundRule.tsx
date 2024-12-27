@@ -1,3 +1,4 @@
+import { createInboundRule } from "@/app/actions/infra";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,10 +15,13 @@ import {
 import { add_inbound_rule_schema } from "@/lib/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
-export function AddInboundRule() {
+export function AddInboundRule({ container_name }: { container_name: string }) {
+  const router = useRouter();
   type AddInboundRuleSchema = z.infer<typeof add_inbound_rule_schema>;
   const {
     register,
@@ -28,7 +32,17 @@ export function AddInboundRule() {
     mode: "onBlur",
   });
   const onSubmit: SubmitHandler<AddInboundRuleSchema> = async (FormData) => {
-    console.log(FormData);
+    const res = await createInboundRule({
+      config_name: FormData.rule_name,
+      domain_name: FormData.domain_name,
+      container_port: FormData.port,
+      container_name: container_name,
+    });
+    if (res.success) {
+      router.refresh();
+    } else {
+      toast.error(res.message);
+    }
   };
 
   return (

@@ -23,8 +23,11 @@ import { container_create_schema } from "@/lib/zod";
 import { Loader2 } from "lucide-react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { z } from "zod";
+import { createContainer } from "@/app/actions/infra";
+import { useRouter } from "next/navigation";
 
 export function CreateContainer() {
+  const router = useRouter();
   type ContainerCreationSchema = z.infer<typeof container_create_schema>;
   const {
     register,
@@ -54,7 +57,15 @@ export function CreateContainer() {
   const defaultVPCID = UserVPCs.filter((item) => item.name === "Default")[0].id;
 
   const onSubmit: SubmitHandler<ContainerCreationSchema> = async (FormData) => {
-    console.log(FormData);
+    const res = await createContainer({
+      container_name: FormData.container_name,
+      vpc_id: FormData.vpc_id,
+    });
+    if (res.success) {
+      router.refresh();
+    } else {
+      alert("Failed to create container, Try again");
+    }
   };
 
   return (

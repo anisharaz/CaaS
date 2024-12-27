@@ -8,7 +8,7 @@ const TerminalComponent = dynamic(() => import("./terminal"), {
 function Terminal() {
   return (
     <div>
-      <div className="overflow-hidden rounded-sm ">
+      <div className="overflow-hidden rounded-sm">
         <TerminalComponent />
       </div>
       <div className="text-xl p-2 space-y-4 ">

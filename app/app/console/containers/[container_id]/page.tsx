@@ -15,7 +15,7 @@ function ContainerDetail() {
         <CpuUsesChart />
       </div>
       <div>
-        <ContainerDetailTabs />
+        <ContainerDetailTabs container_name={"some-thing"} />
       </div>
     </div>
   );

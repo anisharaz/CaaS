@@ -5,6 +5,7 @@ import { container_create_schema } from "@/lib/zod";
 import { ContainerActions, INFRA_BE_URL } from "@/lib/vars";
 import { v4 as uuid } from "uuid";
 import { $Enums } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 export async function startContainer({
   container_name,
@@ -134,11 +135,10 @@ export async function createContainer({
       vpc: vpc_id,
     });
     if (!validation.success) {
-      return new Error(
-        `Validation failed: ${validation.error.errors
-          .map((err) => err.message)
-          .join(", ")}`
-      );
+      return {
+        success: false,
+        message: "Error, Invalid input",
+      };
     }
 
     const user = await prisma.user.findUnique({
@@ -182,6 +182,7 @@ export async function createContainer({
         userId: user?.id as string,
       },
     });
+    revalidatePath("/console/containers");
     return {
       success: true,
       message: "",

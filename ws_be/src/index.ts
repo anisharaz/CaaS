@@ -5,25 +5,34 @@ const mainServer = createServer();
 const wss = new WebSocketServer({ noServer: true });
 
 wss.on("connection", async (ws, req) => {
-  const CONTAINER_ID = "fe4234d6d115";
-  const container = docker.getContainer(CONTAINER_ID);
-  const exec = await container.exec({
-    Cmd: ["/bin/sh"],
-    AttachStdin: true,
-    AttachStdout: true,
-    User: "root",
-    Tty: true,
-  });
-  const stream = await exec.start({ stdin: true, hijack: true, Detach: false });
-  stream.on("data", (data) => {
-    ws.send(data.toString());
-  });
-  ws.on("message", (msg) => {
-    stream.write(msg);
-  });
-  ws.on("close", async () => {
-    stream.write("exit\n");
-  });
+  const CONTAINER_ID = req.url?.split("=")[1];
+  try {
+    const container = docker.getContainer(CONTAINER_ID as string);
+    const exec = await container.exec({
+      Cmd: ["/bin/sh"],
+      AttachStdin: true,
+      AttachStdout: true,
+      User: "root",
+      Tty: true,
+    });
+    const stream = await exec.start({
+      stdin: true,
+      hijack: true,
+      Detach: false,
+    });
+    stream.on("data", (data) => {
+      ws.send(data.toString());
+    });
+    ws.on("message", (msg) => {
+      stream.write(msg);
+    });
+    ws.on("close", async () => {
+      stream.write("exit\n");
+    });
+  } catch (error) {
+    console.log(error);
+    ws.close();
+  }
 });
 
 mainServer.on("upgrade", function upgrade(request, socket, head) {

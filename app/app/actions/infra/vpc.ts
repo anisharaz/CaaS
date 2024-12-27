@@ -4,6 +4,7 @@ import axios from "axios";
 import { v4 as uuid } from "uuid";
 import { add_vpc_schema, edit_vpc_schema } from "@/lib/zod";
 import { DEFAULT_VPC_NAME, INFRA_BE_URL } from "@/lib/vars";
+import { revalidatePath } from "next/cache";
 
 export async function createVPC({ vpc_name }: { vpc_name: string }) {
   const userEmail = "abc@gmail.com";
@@ -13,11 +14,12 @@ export async function createVPC({ vpc_name }: { vpc_name: string }) {
       name: vpc_name,
     });
     if (!validation.success) {
-      return new Error(
-        `Validation failed: ${validation.error.errors
+      return {
+        success: false,
+        message: `Validation failed: ${validation.error.errors
           .map((err) => err.message)
-          .join(", ")}`
-      );
+          .join(", ")}`,
+      };
     }
     const availableVPC = await prisma.available_vpc.findFirst({
       where: {
@@ -64,6 +66,7 @@ export async function createVPC({ vpc_name }: { vpc_name: string }) {
         },
       });
     });
+    revalidatePath("/console/vpc");
     return {
       success: true,
       message: "",
@@ -91,11 +94,12 @@ export async function editVPC({
       id: vpc_id,
     });
     if (!validation.success) {
-      return new Error(
-        `Validation failed: ${validation.error.errors
+      return {
+        success: false,
+        message: `Validation failed: ${validation.error.errors
           .map((err) => err.message)
-          .join(", ")}`
-      );
+          .join(", ")}`,
+      };
     }
     const user = await prisma.user.findUnique({
       where: {
@@ -111,6 +115,7 @@ export async function editVPC({
         vpc_name: vpc_name,
       },
     });
+    revalidatePath("/console/vpc");
     return {
       success: true,
       message: "",
@@ -185,7 +190,7 @@ export async function deleteVPC({ vpc_id }: { vpc_id: string }) {
         used: false,
       },
     });
-
+    revalidatePath("/console/vpc");
     return {
       success: true,
       message: "",

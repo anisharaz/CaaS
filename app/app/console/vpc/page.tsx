@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/table";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -21,6 +20,7 @@ import {
 
 import AddVpc from "./AddVpc";
 import EditVpc from "./EditVpc";
+import VPCDeleteButton from "./action";
 
 function VpcPage() {
   let vpcs = [
@@ -96,10 +96,8 @@ function VpcPage() {
                           This will delete VPC {"' " + vpc.vpc_name + " '"}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogAction className="bg-red-700 hover:bg-red-600 text-white">
-                          Delete
-                        </AlertDialogAction>
+                      <AlertDialogFooter className="flex items-center">
+                        <VPCDeleteButton vpc_id={vpc.id} />
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                       </AlertDialogFooter>
                     </AlertDialogContent>

@@ -1,4 +1,5 @@
 "use client";
+import { editVPC } from "@/app/actions/infra";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,13 +13,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Edit, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 function EditVpc({ VpcName, vpc_id }: { VpcName: string; vpc_id: string }) {
+  const router = useRouter();
   const [vpcNameState, setVpcName] = useState(VpcName);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   async function submitHandler() {
     setLoading(true);
-    ///////////
-    setLoading(false);
+    const res = await editVPC({
+      vpc_name: vpcNameState,
+      vpc_id: vpc_id,
+    });
+    if (res.success) {
+      router.refresh();
+      setLoading(false);
+    } else {
+      setError(res.message);
+      setLoading(false);
+    }
   }
   return (
     <Dialog>
@@ -39,6 +53,7 @@ function EditVpc({ VpcName, vpc_id }: { VpcName: string; vpc_id: string }) {
               }}
             />
           </div>
+          {error && <div className="text-right text-red-500">{error}</div>}
           {vpcNameState.length < 3 && (
             <div className="text-red-600 text-right">Min 3 chars</div>
           )}

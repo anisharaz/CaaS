@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -33,10 +32,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { inbound_rules_schema } from "@/lib/zod";
 import { z } from "zod";
+import { useState } from "react";
+import { deleteInboundRule, editInboundRule } from "@/app/actions/infra";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 function InboundRulesRow({
   ConfigData,
 }: {
   ConfigData: {
+    id: string;
     config_name: string;
     domain_name: string;
     protocol: string;
@@ -44,10 +49,12 @@ function InboundRulesRow({
     port: number;
   };
 }) {
+  const router = useRouter();
   type Schema = z.infer<typeof inbound_rules_schema>;
   const {
     register,
     handleSubmit,
+    setError,
     formState: { isSubmitting, errors },
   } = useForm<Schema>({
     resolver: zodResolver(inbound_rules_schema),
@@ -60,8 +67,48 @@ function InboundRulesRow({
   });
 
   const onSubmit: SubmitHandler<Schema> = async (formData) => {
-    console.log(formData);
+    setError("root", {
+      message: "",
+    });
+    const res = await editInboundRule({
+      config_name: formData.config_name,
+      domain_name: formData.domain_name,
+      container_port: formData.port,
+      inbound_rule_id: ConfigData.id,
+    });
+    if (res.success) {
+      router.refresh();
+      toast.success("Inbound rule updated successfully");
+    } else {
+      setError("root", {
+        message: res.message,
+      });
+      toast.error(res.message);
+    }
   };
+
+  const [deleteInboundRuleState, setDeleteInboundRule] = useState({
+    loading: false,
+    error: "",
+  });
+
+  async function DeleteInboundRule() {
+    setDeleteInboundRule({ ...deleteInboundRuleState, loading: true });
+    const res = await deleteInboundRule({
+      config_name: ConfigData.config_name,
+      inbound_rule_id: ConfigData.id,
+    });
+    if (res.success) {
+      router.refresh();
+    } else {
+      setDeleteInboundRule({
+        loading: false,
+        error: res.message,
+      });
+      toast.error(res.message);
+    }
+  }
+
   return (
     <TableRow>
       <TableCell>{ConfigData.config_name}</TableCell>
@@ -127,9 +174,14 @@ function InboundRulesRow({
                     </TableRow>
                   </TableBody>
                 </Table>
+                {errors.root && (
+                  <div className="text-right text-red-500 pb-2">
+                    {errors.root.message}
+                  </div>
+                )}
                 <DialogFooter>
                   {isSubmitting ? (
-                    <Button disabled size={"lg"} className="w-1/2 text-lg">
+                    <Button disabled size={"lg"} className=" text-lg">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <div>Hold on..</div>
                     </Button>
@@ -153,11 +205,22 @@ function InboundRulesRow({
                   This will delete the inbound rule
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              {deleteInboundRuleState.error && (
+                <div className="text-red-600">
+                  {deleteInboundRuleState.error}
+                </div>
+              )}
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-700 hover:bg-red-600 text-white">
-                  Continue
-                </AlertDialogAction>
+                {deleteInboundRuleState.loading ? (
+                  <Button disabled variant={"destructive"}>
+                    <Loader2 className="animate-spin m-auto" />
+                  </Button>
+                ) : (
+                  <Button variant={"destructive"} onClick={DeleteInboundRule}>
+                    Delete
+                  </Button>
+                )}
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

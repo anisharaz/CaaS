@@ -1,4 +1,5 @@
 "use client";
+import { createVPC } from "@/app/actions/infra";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { add_vpc_schema } from "@/lib/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -27,9 +30,19 @@ function AddVpc() {
     resolver: zodResolver(add_vpc_schema),
     mode: "onChange",
   });
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const onSubmit: SubmitHandler<Schema> = async (formData) => {
-    console.log(formData);
+    const res = await createVPC({
+      vpc_name: formData.name,
+    });
+    if (res.success) {
+      router.refresh();
+    } else {
+      setError(res.message);
+    }
+    return;
   };
   return (
     <Dialog>
@@ -60,6 +73,7 @@ function AddVpc() {
               {errors.name && (
                 <div className="text-red-600">{errors.name.message}</div>
               )}
+              {error && <div className="text-red-600">{error}</div>}
               VPC CIDR will be allocated based on the availability
             </div>
           </div>
