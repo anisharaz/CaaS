@@ -1,3 +1,5 @@
+import { TriangleAlert } from "lucide-react";
+
 function Profile() {
   return (
     <div className="md:m-6 m-2 md:space-y-4 space-y-2">
@@ -26,18 +28,37 @@ function Profile() {
       </div>
       <div className="text-2xl font-bold">Billing</div>
       <div className="space-y-4 md:p-6 p-3 rounded-xl border-2">
-        <div>
-          <div className="font-bold">Billing ID</div>
-          <div>1256898-64s45d4sd-sds4</div>
-        </div>
         <div className="flex gap-12 items-center">
+          <div>
+            <div className="font-bold">Billing ID</div>
+            <div>1256898-64s45d4sd-sds4</div>
+          </div>
           <div>
             <div className="font-bold">Month</div>
             <div>2024-Jul</div>
           </div>
+        </div>
+
+        <div className="flex gap-48 items-center">
           <div>
             <div className="font-bold">Cost</div>
-            <div className="">$00.00</div>
+            <div>$00.00</div>
+          </div>
+          <div className="flex gap-12 items-center">
+            <div>
+              <div className="font-bold">Plan</div>
+              <div>Free</div>
+            </div>
+            <div className="flex items-center gap-2 border rounded-lg p-4 text-sm text-yellow-400">
+              <TriangleAlert className="h-7 w-8" />
+              <div>
+                <p>Warning! Container performance may vary at times.</p>
+                <p>
+                  Upgrade to Premium for guaranteed priority access and
+                  consistent performance!
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

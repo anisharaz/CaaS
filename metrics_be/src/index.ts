@@ -14,18 +14,19 @@ const httpsAgent = new https.Agent({
   ca: fs.readFileSync("/home/manish/docker-certs-local/ca.pem"),
 });
 
-const containerStatsEndpoint =
-  "https://localhost:2376/containers/cb649cc6f112445402713748b5a/stats";
+// real-time metrics of container
+// /metrics/container/stats/?container_id=container_id
 
-app.get("/", async (req, res) => {
+app.get("/metrics/container/stats/", async (req, res) => {
   try {
+    const { container_id } = req.query;
     const incomingResponse = await axios({
       method: "GET",
-      url: containerStatsEndpoint,
+      url: `https://localhost:2376/containers/${container_id}/stats`,
       responseType: "stream",
       httpsAgent,
     });
-
+    // change later
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Transfer-Encoding", "chunked");
 
@@ -47,6 +48,24 @@ app.get("/", async (req, res) => {
       console.log("Client disconnected");
       incomingStream.destroy();
     });
+  } catch (error) {
+    console.error("Error in server:", error);
+    res.status(500).send("Error in server");
+  }
+});
+
+// info about status of container (running or stopped)
+// /metrics/container/status/?container_id=container_id
+
+app.get("/metrics/container/status", async (req, res) => {
+  try {
+    const { container_id } = req.query;
+    const containerStatusResponse = await axios({
+      method: "GET",
+      url: `https://localhost:2376/containers/${container_id}/json`,
+      httpsAgent,
+    });
+    res.status(200).json(containerStatusResponse.data.State);
   } catch (error) {
     console.error("Error in server:", error);
     res.status(500).send("Error in server");
