@@ -1,6 +1,18 @@
 import { TriangleAlert } from "lucide-react";
+import { auth } from "@/auth";
+import prisma from "@/lib/db";
 
-function Profile() {
+async function Profile() {
+  const session = await auth();
+  if (!session?.user) {
+    return <div>No user</div>;
+  }
+  const email = session?.user?.email;
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email as string,
+    },
+  });
   return (
     <div className="md:m-6 m-2 md:space-y-4 space-y-2">
       <div className="text-2xl font-bold">Account</div>
@@ -12,17 +24,17 @@ function Profile() {
           </div>
           <div>
             <div className="font-bold">Account Name</div>
-            <div>Anish Araz</div>
+            <div>{user?.name}</div>
           </div>
         </div>
         <div className="md:grid md:space-x-10 grid-cols-2 flex flex-col gap-4">
           <div>
             <div className="font-bold">Email</div>
-            <div>anisharaz123@gmail.com</div>
+            <div>{user?.email}</div>
           </div>
           <div>
             <div className="font-bold">User Name</div>
-            <div>aaraz</div>
+            <div>{user?.username}</div>
           </div>
         </div>
       </div>
@@ -50,7 +62,7 @@ function Profile() {
               <div>Free</div>
             </div>
             <div className="flex items-center gap-2 border rounded-lg p-4 text-sm text-yellow-400">
-              <TriangleAlert className="h-7 w-8" />
+              <TriangleAlert className="h-8 w-8" />
               <div>
                 <p>Warning! Container performance may vary at times.</p>
                 <p>
