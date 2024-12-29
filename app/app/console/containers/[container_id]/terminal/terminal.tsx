@@ -8,14 +8,15 @@ import { useParams } from "next/navigation";
 
 function TermComp() {
   const termRef = useRef<HTMLDivElement | null>(null);
-  const params = useParams<{ container_id: string }>();
+  // const params = useParams<{ container_id: string }>();
+  const { container_id } = useParams();
   useEffect(() => {
     const term = new Terminal();
     const fitAddon = new FitAddon();
     let ws: WebSocket;
     if (termRef.current) {
       ws = new WebSocket(
-        `http://localhost:5000?container_id=${params.container_id}`
+        `http://localhost:4000/terminal/container/?container_id=${container_id}`
       );
       term.open(termRef.current);
       const attachAddon = new AttachAddon(ws);
@@ -27,7 +28,7 @@ function TermComp() {
       term.dispose();
       ws.close();
     };
-  }, []);
+  }, [container_id]);
   return <div ref={termRef} className="w-full h-full"></div>;
 }
 

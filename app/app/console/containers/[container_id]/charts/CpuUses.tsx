@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Area, AreaChart, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -8,14 +9,13 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useParams } from "next/navigation";
 
-const chartConfig = {
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-4))",
-  },
-} satisfies ChartConfig;
+// const chartConfig = {
+//   mobile: {
+//     label: "Mobile",
+//     color: "hsl(var(--chart-4))",
+//   },
+// } satisfies ChartConfig;
 
 type cpuUsesData = {
   CpuUsesPercent: number;
@@ -25,61 +25,44 @@ export function CpuUsesChart() {
   const { container_id } = useParams();
   const [cpuUses, setCpuUses] = useState<cpuUsesData>([]);
   useEffect(() => {
-    const asyncFetch = async () => {
-      const response = await fetch(
-        `http://localhost:4000/metrics/container/stats?container_id=${container_id}`
-      );
-      if (!response.body) {
-        console.error("No response body");
-        return;
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      let { done, value } = await reader.read();
-      while (!done) {
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n")) {
-          if (line.trim()) {
-            try {
-              const parsedData = JSON.parse(line);
-              // console.log("Received data:", parsedData.cpu_usage_percentage);
-              const cpuUsage =
-                parsedData.cpu_usage_percentage === null
-                  ? 0
-                  : parsedData.cpu_usage_percentage;
-              setCpuUses((prev) => {
-                if (prev.length < 30) {
-                  return [
-                    ...prev,
-                    {
-                      CpuUsesPercent: cpuUsage,
-                    },
-                  ];
-                } else {
-                  const res = prev.slice(1);
-                  res.push({
-                    CpuUsesPercent: cpuUsage,
-                  });
-                  return res;
-                }
-              });
-              console.log(cpuUses);
-            } catch (error) {
-              console.error("Failed to parse JSON chunk", error);
-            }
+    const ws = new WebSocket(
+      `http://localhost:4000/metrics/container/?container_id=${container_id}`
+    );
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log(data);
+        // endpoint returns null data initially
+        const cpuUsage =
+          data.cpu_usage_percentage === null ? 0 : data.cpu_usage_percentage;
+        setCpuUses((prev) => {
+          if (prev.length < 30) {
+            return [
+              ...prev,
+              {
+                CpuUsesPercent: cpuUsage,
+              },
+            ];
+          } else {
+            const array = prev.slice(1);
+            array.push({ CpuUsesPercent: cpuUsage });
+            return array;
           }
-        }
-        ({ done, value } = await reader.read());
+        });
+        ws.onerror = (error) => {
+          console.log("Websocket error:", error);
+        };
+        ws.onclose = () => {
+          console.log("Websocket connection closed");
+        };
+        return () => {
+          ws.close();
+        };
+      } catch (error) {
+        console.error(error);
       }
     };
-    asyncFetch();
-  }, [cpuUses]);
-
-  useEffect(() => {
-    console.log("Updated CPU usage data:", cpuUses);
-  }, [cpuUses]);
+  }, [container_id]);
 
   return (
     <Card className="w-full ">
