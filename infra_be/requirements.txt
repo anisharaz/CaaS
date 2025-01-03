@@ -2,3 +2,5 @@ ansible-runner==2.4.0
 fastapi[standard]
 ansible
 sshkey-tools==0.11.3
+uvicorn
+uvicorn[standard]
