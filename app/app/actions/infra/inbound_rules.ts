@@ -59,18 +59,20 @@ export async function createInboundRule({
       throw new Error("Domain already in use")
     }
 
-    // Task 1: Create DNS record
-    const create_dns = await CfClient.dns.records.create({
-      type: "A",
-      zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
-      name: domain_name,
-      content: process.env.ORACLE_NODE_IP as string,
-      proxied: true,
-      comment: user?.id as string
-    })
+    if (process.env.MODE === "prod") {
+      // Task 1: Create DNS record
+      const create_dns = await CfClient.dns.records.create({
+        type: "A",
+        zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
+        name: domain_name,
+        content: process.env.ORACLE_NODE_IP as string,
+        proxied: true,
+        comment: user?.id as string
+      })
 
-    if (!create_dns) {
-      throw new Error("Failed to create DNS record")
+      if (!create_dns) {
+        throw new Error("Failed to create DNS record")
+      }
     }
 
     // Task 2: Create Inbound rule ini database

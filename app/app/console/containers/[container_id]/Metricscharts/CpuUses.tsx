@@ -1,6 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useState, useEffect, useContext } from "react"
 import { Area, AreaChart, CartesianGrid } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -9,53 +8,31 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart"
-
-type cpuUsesData = {
-  CpuUsesPercent: number
-}[]
+import { ContainerMetricsContext } from "@/context/ContainerMetricsContext"
 
 export function CpuUsesChart() {
-  const { container_id } = useParams()
-  const [cpuUses, setCpuUses] = useState<cpuUsesData>([])
+  const MetrcsData = useContext(ContainerMetricsContext)
+  const [cpuUses, setCpuUses] = useState<
+    {
+      CpuUsesPercent: number
+    }[]
+  >([])
   useEffect(() => {
-    const ws = new WebSocket(
-      `/ws/metrics/container/?container_id=${container_id}`
-    )
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        console.log(data)
-        // endpoint returns null data initially
-        const cpuUsage =
-          data.cpu_usage_percentage === null ? 0 : data.cpu_usage_percentage
-        setCpuUses((prev) => {
-          if (prev.length < 30) {
-            return [
-              ...prev,
-              {
-                CpuUsesPercent: cpuUsage
-              }
-            ]
-          } else {
-            const array = prev.slice(1)
-            array.push({ CpuUsesPercent: cpuUsage })
-            return array
+    setCpuUses((prev) => {
+      if (prev.length < 30) {
+        return [
+          ...prev,
+          {
+            CpuUsesPercent: MetrcsData.cpuUsesPercentage
           }
-        })
-        ws.onerror = (error) => {
-          console.log("Websocket error:", error)
-        }
-        ws.onclose = () => {
-          console.log("Websocket connection closed")
-        }
-        return () => {
-          ws.close()
-        }
-      } catch (error) {
-        console.error(error)
+        ]
+      } else {
+        const array = prev.slice(1)
+        array.push({ CpuUsesPercent: MetrcsData.cpuUsesPercentage })
+        return array
       }
-    }
-  }, [container_id])
+    })
+  }, [MetrcsData])
 
   return (
     <Card className="w-full ">

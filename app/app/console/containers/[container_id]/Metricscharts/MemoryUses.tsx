@@ -1,6 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useContext, useEffect, useState } from "react"
 import { Area, AreaChart, CartesianGrid } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -9,53 +8,31 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart"
-
-type ramUsesData = {
-  RamUsedPercent: number
-}[]
+import { ContainerMetricsContext } from "@/context/ContainerMetricsContext"
 
 export function MemoryUsesChart() {
-  const { container_id } = useParams()
-  const [ramUses, setRamUses] = useState<ramUsesData>([])
+  const MetrcsData = useContext(ContainerMetricsContext)
+  const [ramUses, setRamUses] = useState<
+    {
+      RamUsedPercent: number
+    }[]
+  >([])
   useEffect(() => {
-    const ws = new WebSocket(
-      `/ws/metrics/container/?container_id=${container_id}`
-    )
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        console.log(data)
-
-        const memoryUsage = data.memory_usage_percentage
-        setRamUses((prev) => {
-          if (prev.length < 30) {
-            return [
-              ...prev,
-              {
-                RamUsedPercent: memoryUsage
-              }
-            ]
-          } else {
-            const array = prev.slice(1)
-            array.push({ RamUsedPercent: memoryUsage })
-            return array
+    setRamUses((prev) => {
+      if (prev.length < 30) {
+        return [
+          ...prev,
+          {
+            RamUsedPercent: MetrcsData.ramUsesPercentage
           }
-        })
-        ws.onerror = (error) => {
-          console.log("Websocket error", error)
-        }
-        ws.onclose = () => {
-          console.log("Websocket connection closed")
-        }
-        return () => {
-          ws.close()
-        }
-      } catch (error) {
-        console.error(error)
+        ]
+      } else {
+        const array = prev.slice(1)
+        array.push({ RamUsedPercent: MetrcsData.ramUsesPercentage })
+        return array
       }
-    }
-  }, [container_id])
+    })
+  }, [MetrcsData])
 
   return (
     <Card className="w-full ">

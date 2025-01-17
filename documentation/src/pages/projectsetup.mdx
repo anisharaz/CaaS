@@ -112,12 +112,15 @@ This part of the project is a nextjs application which is responsible for the fr
 
 Make a copy of `.env.example` file as `.env` & fill the variables. Data base is already setup . Now you need the google oauth credential. [Read Here](https://developers.google.com/identity/protocols/oauth2). While creating oauth credential `Authorized JavaScript origins` should be http://localhost:4000 & `Authorized redirect URIs` should be http://localhost:4000/api/auth/callback/google.
 
-For cloudflare dns Setup you need to have cloudflare account. You can ignore this if you do not plan to use `inbound_rues` in local setup. so you can ignore the `CLOUDFLARE_EMAIL`, `CLOUDFLARE_API_KEY` & `CLOUDFLARE_ZONE_ID` variables in `.env` as well.
+:::info
+**Cloudflare DNS** is disabled in `dev` mode so you can ignore the `CLOUDFLARE_*` variables in `.env` file. 
+:::
 
 change the `DATABASE_URL` with your database url and credentials.
 
 ```env title=".env"
 DATABASE_URL="postgresql://postgres:postgresql@localhost:5432/postgres?schema=public"
+MODE="dev"
 AUTH_SECRET="6WTL7JUvFUnxhXh91zA+0P1qXhS0FV1bHH9gpVedWeA="
 INFRA_BE_URL="http://127.0.0.1:8000"
 ORACLE_NODE_IP="11.0.0.1" # It will be the IP address of the docker host in production environment, not relevant in dev environment

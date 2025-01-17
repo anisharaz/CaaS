@@ -51,6 +51,16 @@ export async function initializeUser({ username }: { username: string }) {
         data: {}
       })
 
+      await tx.userData.create({
+        data: {
+          id: userDataID,
+          userId: user?.id as string,
+          resources_limitId: resource_limit.id,
+          username: username,
+          welcomed: true
+        }
+      })
+
       await tx.vpc.create({
         data: {
           id: vpcID,
@@ -69,16 +79,6 @@ export async function initializeUser({ username }: { username: string }) {
         },
         data: {
           used: true
-        }
-      })
-
-      await tx.userData.create({
-        data: {
-          id: userDataID,
-          userId: user?.id as string,
-          resources_limitId: resource_limit.id,
-          username: username,
-          welcomed: true
         }
       })
     })
