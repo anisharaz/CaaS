@@ -7,23 +7,11 @@ import { v4 as uuid } from "uuid"
 
 export async function initializeUser({ username }: { username: string }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   const vpcID = uuid()
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
-      }
-    })
-
-    const resource_limit = await prisma.resources_limit.create({
-      data: {}
-    })
-
-    const useData = await prisma.userData.create({
-      data: {
-        userId: user?.id as string,
-        resources_limitId: resource_limit.id
+        email: session?.user?.email as string
       }
     })
 
@@ -33,36 +21,36 @@ export async function initializeUser({ username }: { username: string }) {
       }
     })
     if (!availableVPC) {
-      return {
-        success: false,
-        message: "No available VPC"
-      }
+      throw new Error("error, no available VPC")
     }
 
+    const userDataID = uuid()
+
+    // Task 1: Create network in the node
     const createNetworkResponse = await axios.post(INFRA_BE_URL + "/network", {
       network_name: vpcID,
       network_subnet: availableVPC?.cidr,
       network_gateway: availableVPC?.gateway
     })
     if (createNetworkResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "error, failed to create network"
-      }
+      throw new Error("failed to create network")
     }
 
+    // Task 2: Create user ssh folder in the node
     const create_ssh_folder = await axios.post(INFRA_BE_URL + "/init_user", {
-      userData_id: useData.id
+      userData_id: userDataID
     })
 
     if (create_ssh_folder.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "error, failed to create ssh folder"
-      }
+      throw new Error("failed to create user ssh folder on the node")
     }
 
+    // Task 3: Create user in the node
     await prisma.$transaction(async (tx) => {
+      const resource_limit = await tx.resources_limit.create({
+        data: {}
+      })
+
       await tx.vpc.create({
         data: {
           id: vpcID,
@@ -71,7 +59,7 @@ export async function initializeUser({ username }: { username: string }) {
           network: availableVPC?.network as string,
           cidr: availableVPC?.cidr as string,
           gateway: availableVPC?.gateway as string,
-          UserDataId: useData.id,
+          UserDataId: userDataID,
           available_vpcId: availableVPC?.id as string
         }
       })
@@ -83,11 +71,12 @@ export async function initializeUser({ username }: { username: string }) {
           used: true
         }
       })
-      await tx.userData.update({
-        where: {
-          id: useData.id
-        },
+
+      await tx.userData.create({
         data: {
+          id: userDataID,
+          userId: user?.id as string,
+          resources_limitId: resource_limit.id,
           username: username,
           welcomed: true
         }
@@ -98,11 +87,13 @@ export async function initializeUser({ username }: { username: string }) {
       success: true,
       message: ""
     }
-  } catch (error) {
+
+    // eslint-disable-next-line
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed creating network try again"
+      message: error.message
     }
   }
 }

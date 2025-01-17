@@ -31,11 +31,10 @@ export async function startContainer({
       }
     })
     if (!container) {
-      return {
-        success: false,
-        message: "Error, container not found"
-      }
+      throw new Error("Error, container not found")
     }
+
+    // Task 1: Start the container
     const startContainerResponse = await axios.post(
       INFRA_BE_URL + "/container_actions",
       {
@@ -44,11 +43,10 @@ export async function startContainer({
       }
     )
     if (startContainerResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "Error, failed to start the container"
-      }
+      throw new Error("Error, failed to start the container")
     }
+
+    // Task 2: Update the database
     await prisma.containers.update({
       where: {
         name: container_name
@@ -57,15 +55,17 @@ export async function startContainer({
         state: $Enums.CONTAINER_STATE.STARTED
       }
     })
+
     return {
       success: true,
       message: ""
     }
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to start the container"
+      message: error.message
     }
   }
 }
@@ -76,11 +76,10 @@ export async function stopContainer({
   container_name: string
 }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
@@ -95,12 +94,10 @@ export async function stopContainer({
     })
 
     if (!container) {
-      return {
-        success: false,
-        message: "Error, container not found"
-      }
+      throw new Error("Error, container not found")
     }
 
+    // Task 1: Stop the container
     const stopContainerResponse = await axios.post(
       INFRA_BE_URL + "/container_actions",
       {
@@ -109,11 +106,10 @@ export async function stopContainer({
       }
     )
     if (stopContainerResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "Error, failed to stop the container"
-      }
+      throw new Error("Error, failed to stop the container")
     }
+
+    // Task 2: Update the database
     await prisma.containers.update({
       where: {
         name: container_name
@@ -122,15 +118,17 @@ export async function stopContainer({
         state: $Enums.CONTAINER_STATE.STOPPED
       }
     })
+
     return {
       success: true,
       message: ""
     }
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to stop the container"
+      message: error.message
     }
   }
 }
@@ -141,11 +139,10 @@ export async function deleteContainer({
   container_name: string
 }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
@@ -162,12 +159,10 @@ export async function deleteContainer({
       }
     })
     if (!container) {
-      return {
-        success: false,
-        message: "Error, container not found"
-      }
+      throw new Error("Error, container not found")
     }
-    // Delete container
+
+    // Task 1: Delete the container
     const deleteContainerResponse = await axios.delete(
       INFRA_BE_URL + "/container",
       {
@@ -177,13 +172,10 @@ export async function deleteContainer({
       }
     )
     if (deleteContainerResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "failed to delete container"
-      }
+      throw new Error("Error, failed to delete the container")
     }
 
-    // Delete ssh files
+    // Task 2: Delete the ssh files
     const deleteSSHFiles = await axios.delete(
       INFRA_BE_URL + "/authorized_keys",
       {
@@ -194,19 +186,18 @@ export async function deleteContainer({
       }
     )
     if (deleteSSHFiles.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "failed to delete ssh files"
-      }
+      throw new Error("Error, failed to delete the ssh files")
     }
 
-    // Log the event where the ssh tunnel was already stopped
+    // Task 3: Delete the ssh tunnel
+    // TODO: add fall
     await axios.delete(INFRA_BE_URL + "/sshtunnel", {
       data: {
         ssh_tunnel_pid: container.ssh_config.ssh_tunnel_process_id
       }
     })
 
+    // Task 4: Update the database
     await prisma.$transaction(async (tx) => {
       await tx.containers.delete({
         where: {
@@ -232,11 +223,12 @@ export async function deleteContainer({
       success: true,
       message: ""
     }
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to delete container"
+      message: error.message
     }
   }
 }
@@ -247,11 +239,10 @@ export async function restartContainer({
   container_name: string
 }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
@@ -266,12 +257,10 @@ export async function restartContainer({
     })
 
     if (!container) {
-      return {
-        success: false,
-        message: "Error, container not found"
-      }
+      throw new Error("Error, container not found")
     }
 
+    // Task 1: Restart the container
     const restartContainerResponse = await axios.post(
       INFRA_BE_URL + "/container_actions",
       {
@@ -280,20 +269,19 @@ export async function restartContainer({
       }
     )
     if (restartContainerResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "Error, failed to restart container"
-      }
+      throw new Error("Error, failed to restart the container")
     }
+
     return {
       success: true,
-      message: ""
+      message: "Container restart succeeded"
     }
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to restart container"
+      message: error.message
     }
   }
 }
@@ -308,7 +296,6 @@ export async function createContainer({
   ssh_key_id: string
 }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
     const validation = container_create_schema.safeParse({
       container_name: container_name,
@@ -316,14 +303,11 @@ export async function createContainer({
       ssh_key_id: ssh_key_id
     })
     if (!validation.success) {
-      return {
-        success: false,
-        message: "Error, Invalid input"
-      }
+      throw new Error("Data Validation error")
     }
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
@@ -341,17 +325,12 @@ export async function createContainer({
       }
     })
     if (!vpc) {
-      return {
-        success: false,
-        message: "Error, VPC not found"
-      }
+      throw new Error("VPC not found")
     }
     if (!sshKey) {
-      return {
-        success: false,
-        message: "Error, SSH Key not found"
-      }
+      throw new Error("SSH Key not found")
     }
+
     const ContainerName = uuid()
 
     const userData = await prisma.userData.findUnique({
@@ -363,15 +342,12 @@ export async function createContainer({
         containers: true
       }
     })
-
+    // User's container limit check
     if (
       (userData?.containers.length as number) >=
       (userData?.resources_limit.container_limit as number)
     ) {
-      return {
-        success: false,
-        message: "Error, Container limit reached"
-      }
+      throw new Error("Error, Container limit reached")
     }
 
     const available_ssh_proxy_port =
@@ -380,13 +356,12 @@ export async function createContainer({
           used: false
         }
       })
+
     if (!available_ssh_proxy_port) {
-      return {
-        success: false,
-        message: "Error, No available ssh proxy port"
-      }
+      throw new Error("Error, No available ssh proxy port")
     }
 
+    // Task 1: Create ssh key
     const create_authorized_key = await axios.post(
       INFRA_BE_URL + "/authorized_keys",
       {
@@ -395,14 +370,11 @@ export async function createContainer({
         container_name: ContainerName
       }
     )
-
     if (create_authorized_key.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "error, Failed to ssh key"
-      }
+      throw new Error("Error, Failed to create ssh key")
     }
 
+    // Task 2: Create container
     const createContainerResponse = await axios.post(
       INFRA_BE_URL + "/container",
       {
@@ -414,73 +386,74 @@ export async function createContainer({
         userData_id: user?.UserData?.id
       }
     )
-
     if (createContainerResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "error, Failed to create container"
-      }
+      throw new Error("Error, Failed to create container")
     }
 
+    // Task 3: Create ssh tunnel
     const sshTunnelResponse = await axios.post(INFRA_BE_URL + "/sshtunnel", {
       ssh_proxy_port: available_ssh_proxy_port?.ssh_proxy_port,
       container_ip: createContainerResponse.data.container_ip,
       node_name: available_ssh_proxy_port?.ssh_proxy_node_name,
       ssh_tunnel_pid: 0
     })
-
     if (sshTunnelResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "error, Failed to create ssh tunnel"
-      }
+      throw new Error("Error, Failed to create ssh tunnel")
     }
-
-    await prisma.available_ssh_proxy_ports.update({
-      where: {
-        id: available_ssh_proxy_port?.id as string
-      },
-      data: {
-        used: true
-      }
-    })
-
-    const ssh_config = await prisma.ssh_config.create({
-      data: {
-        ssh_proxy_node_name: available_ssh_proxy_port.ssh_proxy_node_name,
-        ssh_proxy_port: available_ssh_proxy_port.ssh_proxy_port,
-        ssh_tunnel_process_id: sshTunnelResponse.data.ssh_tunnel_pid,
-        available_ssh_proxy_portsId: available_ssh_proxy_port.id,
-        UserDataId: user?.UserData?.id as string
-      }
-    })
 
     const containerIP = createContainerResponse.data.container_ip
-    await prisma.containers.create({
-      data: {
-        name: ContainerName,
-        nick_name: container_name,
-        node: "oracle_arm",
-        image: "aaraz/caas",
-        tag: "1.2",
-        state: $Enums.CONTAINER_STATE.STARTED,
-        vpcId: vpc?.id as string,
-        ip_address: containerIP,
-        UserDataId: user?.UserData?.id as string,
-        ssh_config_id: ssh_config.id,
-        ssh_keysId: sshKey.id
-      }
+
+    // Task 4: Update the database
+    await prisma.$transaction(async (tx) => {
+      await tx.available_ssh_proxy_ports.update({
+        where: {
+          id: available_ssh_proxy_port?.id as string
+        },
+        data: {
+          used: true
+        }
+      })
+
+      const ssh_config = await tx.ssh_config.create({
+        data: {
+          ssh_proxy_node_name: available_ssh_proxy_port.ssh_proxy_node_name,
+          ssh_proxy_port: available_ssh_proxy_port.ssh_proxy_port,
+          ssh_tunnel_process_id: sshTunnelResponse.data.ssh_tunnel_pid,
+          available_ssh_proxy_portsId: available_ssh_proxy_port.id,
+          UserDataId: user?.UserData?.id as string
+        }
+      })
+
+      await tx.containers.create({
+        data: {
+          name: ContainerName,
+          nick_name: container_name,
+          node: "oracle_arm",
+          image: "aaraz/caas",
+          tag: "1.2",
+          state: $Enums.CONTAINER_STATE.STARTED,
+          vpcId: vpc?.id as string,
+          ip_address: containerIP,
+          UserDataId: user?.UserData?.id as string,
+          ssh_config_id: ssh_config.id,
+          ssh_keysId: sshKey.id
+        }
+      })
     })
+
+    // Revalidate cache used by Nextjs
     revalidatePath("/console/containers")
+
     return {
       success: true,
-      message: ""
+      message: "Container Created Successfully"
     }
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "failed to create container"
+      message: error.message
     }
   }
 }

@@ -9,30 +9,27 @@ import { auth } from "@/auth"
 
 export async function createVPC({ vpc_name }: { vpc_name: string }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
-    //validation
     const validation = add_vpc_schema.safeParse({
       name: vpc_name
     })
     if (!validation.success) {
-      return {
-        success: false,
-        message: `Validation failed: ${validation.error.errors
-          .map((err) => err.message)
-          .join(", ")}`
-      }
+      throw new Error("Validation failed")
     }
     const availableVPC = await prisma.available_vpc.findFirst({
       where: {
         used: false
       }
     })
+    if (!availableVPC) {
+      throw new Error("No available VPC")
+    }
+
     const networkID = uuid()
 
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: {
@@ -49,24 +46,20 @@ export async function createVPC({ vpc_name }: { vpc_name: string }) {
       (user?.UserData?.vpc.length as number) >=
       (user?.UserData?.resources_limit.vpc_limit as number)
     ) {
-      return {
-        success: false,
-        message: "VPC limit reached"
-      }
+      throw new Error("VPC limit reached")
     }
 
+    // Task 1: Create VPC on node
     const createVPCResponse = await axios.post(INFRA_BE_URL + "/network", {
       network_name: networkID,
       network_subnet: availableVPC?.cidr,
       network_gateway: availableVPC?.gateway
     })
     if (createVPCResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "Error, failed to create VPC"
-      }
+      throw new Error("Error, Failed to create VPC")
     }
 
+    // Task 2: Create VPC in database
     await prisma.$transaction(async (tx) => {
       await tx.vpc.create({
         data: {
@@ -89,16 +82,20 @@ export async function createVPC({ vpc_name }: { vpc_name: string }) {
         }
       })
     })
+
+    // revalidate cache created bt nextjs
     revalidatePath("/console/vpc")
+
     return {
       success: true,
-      message: ""
+      message: "VPC created successfully"
     }
-  } catch (error) {
+    // eslint-disable-next-line
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to create VPC"
+      message: error.message
     }
   }
 }
@@ -111,28 +108,24 @@ export async function editVPC({
   vpc_id: string
 }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
     const validation = edit_vpc_schema.safeParse({
       name: vpc_name,
       id: vpc_id
     })
     if (!validation.success) {
-      return {
-        success: false,
-        message: `Validation failed: ${validation.error.errors
-          .map((err) => err.message)
-          .join(", ")}`
-      }
+      throw new Error("Validation failed")
     }
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
       }
     })
+
+    // Task 1: Edit VPC in database
     await prisma.vpc.update({
       where: {
         id: vpc_id,
@@ -142,27 +135,30 @@ export async function editVPC({
         vpc_name: vpc_name
       }
     })
+
+    // revalidate cache created bt nextjs
     revalidatePath("/console/vpc")
+
     return {
       success: true,
-      message: ""
+      message: "VPC edited successfully"
     }
-  } catch (error) {
+    // eslint-disable-next-line
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to edit VPC"
+      message: error.message
     }
   }
 }
 
 export async function deleteVPC({ vpc_id }: { vpc_id: string }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
@@ -179,23 +175,16 @@ export async function deleteVPC({ vpc_id }: { vpc_id: string }) {
       }
     })
     if (!vpc) {
-      return {
-        success: false,
-        message: "VPC not found"
-      }
+      throw new Error("VPC not found")
     }
     if (vpc?.containers.length !== 0) {
-      return {
-        success: false,
-        message: "VPC is not empty, delete all containers first"
-      }
+      throw new Error("VPC has containers, delete them first")
     }
     if (vpc.vpc_name === DEFAULT_VPC_NAME) {
-      return {
-        success: false,
-        message: "Default VPC cannot be deleted"
-      }
+      throw new Error("Cannot delete default VPC")
     }
+
+    // Task 1: Delete VPC on node
     const deleteVPCResponse = await axios.delete(INFRA_BE_URL + "/network", {
       data: {
         network_name: vpc?.id,
@@ -204,35 +193,39 @@ export async function deleteVPC({ vpc_id }: { vpc_id: string }) {
       }
     })
     if (deleteVPCResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "Error, Failed to delete VPC"
-      }
+      throw new Error("Error, Failed to delete VPC")
     }
-    await prisma.vpc.delete({
-      where: {
-        id: vpc_id
-      }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.vpc.delete({
+        where: {
+          id: vpc_id
+        }
+      })
+
+      await tx.available_vpc.update({
+        where: {
+          id: vpc.available_vpcId
+        },
+        data: {
+          used: false
+        }
+      })
     })
 
-    await prisma.available_vpc.update({
-      where: {
-        id: vpc.available_vpcId
-      },
-      data: {
-        used: false
-      }
-    })
+    // revalidate cache created bt nextjs
     revalidatePath("/console/vpc")
+
     return {
       success: true,
       message: ""
     }
-  } catch (error) {
+    // eslint-disable-next-line
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to delete VPC"
+      message: error.message
     }
   }
 }

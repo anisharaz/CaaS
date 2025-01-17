@@ -19,9 +19,7 @@ export async function createInboundRule({
   container_name: string
 }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
-    // validation check
     const validation = inbound_rules_schema.safeParse({
       config_name: config_name,
       domain_name: domain_name,
@@ -29,17 +27,12 @@ export async function createInboundRule({
     })
 
     if (!validation.success) {
-      return {
-        success: false,
-        message: `Validation failed: ${validation.error.errors
-          .map((err) => err.message)
-          .join(", ")}`
-      }
+      throw new Error("Validation failed")
     }
 
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
@@ -52,7 +45,10 @@ export async function createInboundRule({
       }
     })
 
-    // check if domain is already allocated
+    if (!container) {
+      throw new Error("Container not found")
+    }
+
     const doesDomainAlreadyExists = await prisma.inbound_rules.findUnique({
       where: {
         domain_name: domain_name
@@ -60,12 +56,10 @@ export async function createInboundRule({
     })
 
     if (doesDomainAlreadyExists) {
-      return {
-        success: false,
-        message: "Domain Name is already in use"
-      }
+      throw new Error("Domain already in use")
     }
 
+    // Task 1: Create DNS record
     const create_dns = await CfClient.dns.records.create({
       type: "A",
       zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
@@ -75,6 +69,11 @@ export async function createInboundRule({
       comment: user?.id as string
     })
 
+    if (!create_dns) {
+      throw new Error("Failed to create DNS record")
+    }
+
+    // Task 2: Create Inbound rule ini database
     const res = await prisma.inbound_rules.create({
       data: {
         node: "oracle_arm",
@@ -90,6 +89,7 @@ export async function createInboundRule({
       }
     })
 
+    // Task 3: Create Inbound rule on the node
     const createInboundRulesResponse = await axios.post(
       INFRA_BE_URL + "/nginx",
       {
@@ -103,22 +103,23 @@ export async function createInboundRule({
       }
     )
     if (createInboundRulesResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "Error, failed to create inbound rule"
-      }
+      throw new Error("failed to create inbound rule on the node")
     }
 
+    // Revalidate cache made by nextjs
     revalidatePath("/console/containers/[container_id]")
+
     return {
       success: true,
       message: ""
     }
-  } catch (error) {
+
+    // eslint-disable-next-line
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to create inbound rule"
+      message: error.message
     }
   }
 }
@@ -135,44 +136,24 @@ export async function editInboundRule({
   inbound_rule_id: string
 }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
-    //validation
     const validation = inbound_rules_schema.safeParse({
       config_name,
       domain_name,
       port: container_port
     })
     if (!validation.success) {
-      return {
-        success: false,
-        message: `Validation failed: ${validation.error.errors
-          .map((err) => err.message)
-          .join(", ")}`
-      }
+      throw new Error("Validation failed")
     }
 
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
       }
     })
-
-    const rule = await prisma.inbound_rules.findUnique({
-      where: {
-        id: inbound_rule_id
-      }
-    })
-
-    if (!rule) {
-      return {
-        success: false,
-        message: "Inbound rule not found"
-      }
-    }
 
     const inbound_rule = await prisma.inbound_rules.findUnique({
       where: {
@@ -182,18 +163,18 @@ export async function editInboundRule({
     })
 
     if (!inbound_rule) {
-      return {
-        success: false,
-        message: "Inbound rule not found"
-      }
+      throw new Error("Inbound rule not found")
     }
 
+    // No need to check of container exist because
+    // if inbound_rule exist then it must be associated to any container.
     const container = await prisma.containers.findUnique({
       where: {
-        name: rule.containersName
+        name: inbound_rule?.containersName
       }
     })
 
+    // Task 1: Edit inbound rule on node
     const editInboundRulesResponse = await axios.post(
       INFRA_BE_URL + "/edit_nginx",
       {
@@ -207,12 +188,10 @@ export async function editInboundRule({
       }
     )
     if (editInboundRulesResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "Error, failed to create inbound rule"
-      }
+      throw new Error("failed to edit inbound rule on the node")
     }
 
+    // Task 2: Update DNS record
     const update_dns_record = await CfClient.dns.records.update(
       inbound_rule.cloudflare_record_id,
       {
@@ -225,6 +204,7 @@ export async function editInboundRule({
       }
     )
 
+    // Task 3: Update inbound rule in database
     await prisma.inbound_rules.update({
       where: {
         id: inbound_rule_id,
@@ -242,11 +222,13 @@ export async function editInboundRule({
       success: true,
       message: ""
     }
-  } catch (error) {
+
+    // eslint-disable-next-line
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to edit inbound rule"
+      message: error.message
     }
   }
 }
@@ -257,11 +239,10 @@ export async function deleteInboundRule({
   inbound_rule_id: string
 }) {
   const session = await auth()
-  const userEmail = session?.user?.email as string
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email: userEmail
+        email: session?.user?.email as string
       },
       include: {
         UserData: true
@@ -274,12 +255,10 @@ export async function deleteInboundRule({
       }
     })
     if (!rule) {
-      return {
-        success: false,
-        message: "Inbound rule not found"
-      }
+      throw new Error("Inbound rule not found")
     }
 
+    // Task 1: Delete inbound rule on node
     const deleteInboundRuleResponse = await axios.delete(
       INFRA_BE_URL + "/nginx",
       {
@@ -291,32 +270,34 @@ export async function deleteInboundRule({
     )
 
     if (deleteInboundRuleResponse.data.return_code !== 0) {
-      return {
-        success: false,
-        message: "Error, failed to delete inbound rule"
-      }
+      throw new Error("Failed to delete inbound rule on the node")
     }
 
+    // Task 2: Delete DNS record in cloudflare
     await CfClient.dns.records.delete(rule.cloudflare_record_id, {
       zone_id: process.env.CLOUDFLARE_ZONE_ID as string
     })
 
+    // Task 3: Delete inbound rule in database
     await prisma.inbound_rules.delete({
       where: {
         id: inbound_rule_id
       }
     })
 
+    // revalidate cache made by nextjs
     revalidatePath("/console/containers/[container_id]")
+
     return {
       success: true,
       message: ""
     }
-  } catch (error) {
+    // eslint-disable-next-line
+  } catch (error: any) {
     console.log(error)
     return {
       success: false,
-      message: "Failed to delete inbound rule"
+      message: error.message
     }
   }
 }
