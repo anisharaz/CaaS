@@ -42,6 +42,8 @@ from type import (
     DeleteContainerReturnData,
     EditNginxConfigData,
     EditNginxConfigReturnData,
+    DockerNetworkDeleteData,
+    DockerNetworkDeleteReturnData,
 )
 
 
@@ -71,7 +73,9 @@ async def create_network(network: DockerNetworkData) -> DockerNetworkReturnData:
 
 
 @app.delete("/network")
-async def delete_network(network: DockerNetworkData) -> DockerNetworkReturnData:
+async def delete_network(
+    network: DockerNetworkDeleteData,
+) -> DockerNetworkDeleteReturnData:
     return await DeleteDockerNetwork(network)
 
 

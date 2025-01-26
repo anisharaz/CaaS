@@ -45,6 +45,14 @@ class DockerNetworkReturnData(BaseModel):
     return_code: int
 
 
+class DockerNetworkDeleteData(BaseModel):
+    network_name: str
+
+
+class DockerNetworkDeleteReturnData(BaseModel):
+    return_code: int
+
+
 ########################################## Nginx Config ############################################
 class CreateNginxConfigData(BaseModel):
     config_id: str

@@ -24,41 +24,127 @@ from type import (
     DeleteContainerReturnData,
     EditNginxConfigData,
     EditNginxConfigReturnData,
+    DockerNetworkDeleteData,
+    DockerNetworkDeleteReturnData,
 )
 import threading
 from typing import Tuple
 import asyncio
+from docker import DockerClient, types as docker_types
+from docker.models.containers import Container
+from docker.errors import APIError
+import os
+from dotenv import load_dotenv
+import time
+
+load_dotenv()
+
+
+docker_client = DockerClient(base_url=os.environ.get("DOCKER_HOST"))
+
+
+########################################## Container ###############################################
+async def CreateContainer(ContainerData: ContainerData) -> ContainerReturnData:
+    try:
+        key_host_path = "/caas/ssh_keys/%s/%s/authorized_keys" % (
+            ContainerData.userData_id,
+            ContainerData.container_name,
+        )
+
+        container_detail: Container = docker_client.containers.run(
+            name=ContainerData.container_name,
+            image=ContainerData.image + ":" + ContainerData.tag,
+            network=ContainerData.network,
+            cpu_count=1,
+            mem_limit="512m",
+            volumes={key_host_path: {"bind": "/root/.ssh/authorized_keys"}},
+            detach=True,
+        )
+
+        while (
+            container_detail.attrs["NetworkSettings"]["Networks"][
+                ContainerData.network
+            ]["IPAddress"]
+            == ""
+        ):
+            time.sleep(1)
+            container_detail.reload()
+
+        ReturnData = ContainerReturnData(
+            container_ip=container_detail.attrs["NetworkSettings"]["Networks"][
+                ContainerData.network
+            ]["IPAddress"],
+            return_code=0,
+        )
+        return ReturnData
+    except APIError as e:
+        print(e)
+        return ContainerReturnData(container_ip="", return_code=1)
+
+
+async def DeleteContainer(
+    ContainerData: DeleteContainerData,
+) -> DeleteContainerReturnData:
+    try:
+        container = docker_client.containers.get(
+            container_id=ContainerData.container_name
+        )
+        container.remove(force=True)
+        return DeleteContainerReturnData(return_code=0)
+    except APIError as e:
+        print(e)
+        return DeleteContainerReturnData(return_code=e.status_code)
+
+
+async def ActionsContainer(data: ContainerActions) -> ContainerActionsReturnData:
+    try:
+        container = docker_client.containers.get(data.container_name)
+        if data.action == "start":
+            container.start()
+        elif data.action == "stop":
+            container.stop()
+        elif data.action == "restart":
+            container.restart()
+        ReturnData = ContainerActionsReturnData(return_code=0)
+        return ReturnData
+    except APIError as e:
+        print(e)
+        return ContainerActionsReturnData(return_code=e.status_code)
 
 
 ########################################## Docker Network ##########################################
 async def CreateDockerNetwork(
     CreateNetworkData: DockerNetworkData,
 ) -> DockerNetworkReturnData:
-    res_async: Tuple[threading.Thread, Runner] = run_async(
-        private_data_dir=".",
-        playbook="docker_network/create_network.yaml",
-        extravars=CreateNetworkData.model_dump(),  # model_dump is converting to dict
-    )
-    res = res_async[1]
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, res_async[0].join)
-    ReturnData = DockerNetworkReturnData(return_code=res.rc)
-    return ReturnData
+    try:
+        ipam_pool = docker_types.IPAMPool(
+            subnet=CreateNetworkData.network_subnet,
+            gateway=CreateNetworkData.network_gateway,
+        )
+        ipam_config = docker_types.IPAMConfig(pool_configs=[ipam_pool])
+        docker_client.networks.create(
+            name=CreateNetworkData.network_name,
+            driver="bridge",
+            ipam=ipam_config,
+        )
+        ReturnData = DockerNetworkReturnData(return_code=0)
+        return ReturnData
+    except APIError as e:
+        print(e)
+        return DockerNetworkReturnData(return_code=e.status_code)
 
 
 async def DeleteDockerNetwork(
-    DeleteNetworkData: DockerNetworkData,
-) -> DockerNetworkReturnData:
-    res_async: Tuple[threading.Thread, Runner] = run_async(
-        private_data_dir=".",
-        playbook="docker_network/delete_network.yaml",
-        extravars=DeleteNetworkData.model_dump(),  # model_dump is converting to dict
-    )
-    res = res_async[1]
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, res_async[0].join)
-    ReturnData = DockerNetworkReturnData(return_code=res.rc)
-    return ReturnData
+    DeleteNetworkData: DockerNetworkDeleteData,
+) -> DockerNetworkDeleteReturnData:
+    try:
+        network = docker_client.networks.get(DeleteNetworkData.network_name)
+        network.remove()
+        ReturnData = DockerNetworkReturnData(return_code=0)
+        return ReturnData
+    except APIError as e:
+        print(e)
+        return DockerNetworkReturnData(return_code=e.status_code)
 
 
 ########################################## Nginx Config ############################################
@@ -106,57 +192,7 @@ async def EditNginxConfig(
     return ReturnData
 
 
-########################################## Container ###############################################
-async def CreateContainer(ContainerData: ContainerData) -> ContainerReturnData:
-    res_async: Tuple[threading.Thread, Runner] = run_async(
-        private_data_dir=".",
-        playbook="container/create_container.yaml",
-        extravars=ContainerData.model_dump(),
-    )
-    res = res_async[1]
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, res_async[0].join)
-    container_ip = ""
-    for event in res.events:
-        try:
-            container_ip = event["event_data"]["res"]["container"]["NetworkSettings"][
-                "Networks"
-            ][ContainerData.network]["IPAddress"]
-        except:
-            pass
-    ReturnData = ContainerReturnData(container_ip=container_ip, return_code=res.rc)
-    return ReturnData
-
-
-async def DeleteContainer(
-    ContainerData: DeleteContainerData,
-) -> DeleteContainerReturnData:
-    res_async: Tuple[threading.Thread, Runner] = run_async(
-        private_data_dir=".",
-        playbook="container/delete_container.yaml",
-        extravars=ContainerData.model_dump(),
-    )
-    res = res_async[1]
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, res_async[0].join)
-    ReturnData = DeleteContainerReturnData(return_code=res.rc)
-    return ReturnData
-
-
-async def ActionsContainer(data: ContainerActions) -> ContainerActionsReturnData:
-    res_async: Tuple[threading.Thread, Runner] = run_async(
-        private_data_dir=".",
-        playbook="container/container_actions.yaml",
-        extravars=data.model_dump(),
-    )
-    res = res_async[1]
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, res_async[0].join)
-    ReturnData = ContainerActionsReturnData(return_code=res.rc)
-    return ReturnData
-
-
-########################################## SSH ###############################################
+########################################## SSH Tunnel ###############################################
 async def CreateSSHTunnel(data: CreateSSHTunnelData) -> CreateSSHTunnelReturnData:
     res_async: Tuple[threading.Thread, Runner] = run_async(
         private_data_dir=".",

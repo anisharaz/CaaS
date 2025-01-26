@@ -88,7 +88,7 @@ function NavBar() {
                 <LogoutButton />
               </div>
               <Link
-                href={"/docs"}
+                href={"/documentation"}
                 className="text-lg text-blue-500 hover:text-blue-800 underline-offset-2 hover:underline"
               >
                 Docs
