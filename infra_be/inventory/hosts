@@ -1,4 +1,4 @@
-[docker_host]
+[docker_host_vm]
 192.168.122.2 ansible_connection=ssh ansible_user=root ansible_ssh_private_key_file=/home/anish/.ssh/github_pri
 
 [ssh_proxy]

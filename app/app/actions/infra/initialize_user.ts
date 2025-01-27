@@ -18,6 +18,9 @@ export async function initializeUser({ username }: { username: string }) {
     const availableVPC = await prisma.available_vpc.findFirst({
       where: {
         used: false
+      },
+      include: {
+        nodes: true
       }
     })
     if (!availableVPC) {
@@ -38,14 +41,15 @@ export async function initializeUser({ username }: { username: string }) {
 
     // Task 2: Create user ssh folder in the node
     const create_ssh_folder = await axios.post(INFRA_BE_URL + "/init_user", {
-      userData_id: userDataID
+      userData_id: userDataID,
+      userDefaultVPCNodeName: availableVPC.nodes.node_name
     })
 
     if (create_ssh_folder.data.return_code !== 0) {
       throw new Error("failed to create user ssh folder on the node")
     }
 
-    // Task 3: Create user in the node
+    // Task 3: update the database
     await prisma.$transaction(async (tx) => {
       const resource_limit = await tx.resources_limit.create({
         data: {}
@@ -57,7 +61,7 @@ export async function initializeUser({ username }: { username: string }) {
           userId: user?.id as string,
           resources_limitId: resource_limit.id,
           username: username,
-          welcomed: true
+          user_state: "ACTIVE"
         }
       })
 
@@ -65,7 +69,7 @@ export async function initializeUser({ username }: { username: string }) {
         data: {
           id: vpcID,
           vpc_name: DEFAULT_VPC_NAME,
-          node: "oracle_arm",
+          nodeId: availableVPC.nodeId,
           network: availableVPC?.network as string,
           cidr: availableVPC?.cidr as string,
           gateway: availableVPC?.gateway as string,

@@ -61,6 +61,7 @@ class CreateNginxConfigData(BaseModel):
     ip: str
     port: int
     container_name: str
+    dockerHostName: str
 
 
 class CreateNginxConfigReturnData(BaseModel):
@@ -70,6 +71,7 @@ class CreateNginxConfigReturnData(BaseModel):
 class DeleteNginxConfigData(BaseModel):
     config_id: str
     container_name: str
+    dockerHostName: str
 
 
 class DeleteNginxConfigReturnData(BaseModel):
@@ -83,6 +85,7 @@ class EditNginxConfigData(BaseModel):
     ip: str
     port: int
     container_name: str
+    dockerHostName: str
 
 
 class EditNginxConfigReturnData(BaseModel):
@@ -93,8 +96,9 @@ class EditNginxConfigReturnData(BaseModel):
 class CreateSSHTunnelData(BaseModel):
     ssh_proxy_port: int
     container_ip: str
-    node_name: str
+    ssh_proxy_node_name: str
     ssh_tunnel_pid: int
+    dockerHostName: str
 
 
 class CreateSSHTunnelReturnData(BaseModel):
@@ -104,6 +108,7 @@ class CreateSSHTunnelReturnData(BaseModel):
 
 class DeleteSSHTunnelData(BaseModel):
     ssh_tunnel_pid: int
+    ssh_proxy_node_name: str
 
 
 class DeleteSSHTunnelReturnData(BaseModel):
@@ -114,6 +119,7 @@ class AuthorizedKeysData(BaseModel):
     userData_id: str
     ssh_public_key: str
     container_name: str
+    dockerHostName: str
 
 
 class AuthorizedKeysReturnData(BaseModel):
@@ -123,6 +129,7 @@ class AuthorizedKeysReturnData(BaseModel):
 class DeleteAuthorizedKeysData(BaseModel):
     userData_id: str
     container_name: str
+    dockerHostName: str
 
 
 class DeleteAuthorizedKeysReturnData(BaseModel):
@@ -139,6 +146,7 @@ class SSHKeyGenReturnData(BaseModel):
 
 class InitUserData(BaseModel):
     userData_id: str
+    userDefaultVPCNodeName: str
 
 
 class InitUserReturnData(BaseModel):

@@ -1,5 +1,5 @@
 - name: Delete SSH authorized key file
-  hosts: docker_host
+  hosts: "{{ dockerHostName }}"
   gather_facts: false
   tasks:
     - name: Delete SSH authorized key file

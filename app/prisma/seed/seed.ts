@@ -1,11 +1,19 @@
 import { PrismaClient } from "@prisma/client"
 const prisma = new PrismaClient()
 async function main() {
+  const node = await prisma.nodes.create({
+    data: {
+      node_name: "docker_host_vm",
+      node_ip: "192.168.122.2",
+      node_type: "FREE"
+    }
+  })
+
   function networkAddressGenerator() {
     const temp = []
     for (let i = 0; i <= 50; i++) {
       temp.push({
-        node: "oracle_arm",
+        nodeId: node.id,
         network: `15.0.${i}.0`,
         cidr: `15.0.${i}.0/24`,
         gateway: `15.0.${i}.1`,
@@ -26,7 +34,7 @@ async function main() {
     const temp = []
     for (let i = 2000; i <= 2200; i++) {
       temp.push({
-        ssh_proxy_node_name: "dockerhost",
+        ssh_proxy_node_name: "ssh_proxy",
         ssh_proxy_port: i,
         used: false
       })

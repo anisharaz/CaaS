@@ -1,5 +1,5 @@
 - name: Edit Nginx configuration
-  hosts: docker_host
+  hosts: "{{ dockerHostName  }}"
   gather_facts: false
   tasks:
     - name: Delete existing nginx config

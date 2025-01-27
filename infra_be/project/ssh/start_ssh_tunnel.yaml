@@ -1,10 +1,10 @@
 - name: Create ssh tunnel
-  hosts: ssh_proxy
+  hosts: "{{ ssh_proxy_node_name }}"
   gather_facts: false
   tasks:
     - name: Create SSH tunnel if not already running
       ansible.builtin.shell: |
-        ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -N -f -L 0.0.0.0:{{ ssh_proxy_port }}:{{ container_ip }}:22 {{ node_name }} &&
-         pgrep -f '^[^/]*ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -N -f -L 0.0.0.0:{{ ssh_proxy_port }}:{{ container_ip }}:22 {{ node_name }}$'
+        ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -N -f -L 0.0.0.0:{{ ssh_proxy_port }}:{{ container_ip }}:22 {{ dockerHostName }} &&
+         pgrep -f '^[^/]*ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -N -f -L 0.0.0.0:{{ ssh_proxy_port }}:{{ container_ip }}:22 {{ dockerHostName }}$'
       args:
         creates: /proc/{{ ssh_tunnel_pid }}/status

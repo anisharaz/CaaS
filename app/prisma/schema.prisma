@@ -5,12 +5,14 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public", "nodes"]
 }
 
 model User {
@@ -26,6 +28,23 @@ model User {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   UserData      UserData?
+
+  @@schema("public")
+}
+
+enum USER_TYPE {
+  FREE
+  PREMIUM
+
+  @@schema("public")
+}
+
+enum USER_STATE {
+  ACTIVE
+  NEW
+  SETTING_UP
+
+  @@schema("public")
 }
 
 model UserData {
@@ -33,7 +52,7 @@ model UserData {
   user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String          @unique
   username          String?
-  welcomed          Boolean         @default(false)
+  user_state        USER_STATE      @default(NEW)
   vpc               vpc[]
   inbound_rules     inbound_rules[]
   containers        containers[]
@@ -41,6 +60,9 @@ model UserData {
   ssh_keys          ssh_keys[]
   resources_limit   resources_limit @relation(fields: [resources_limitId], references: [id], onDelete: Cascade)
   resources_limitId String          @unique
+  user_type         USER_TYPE       @default(FREE)
+
+  @@schema("public")
 }
 
 model Account {
@@ -62,6 +84,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
+  @@schema("public")
 }
 
 model Session {
@@ -72,6 +95,8 @@ model Session {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@schema("public")
 }
 
 model VerificationToken {
@@ -80,6 +105,7 @@ model VerificationToken {
   expires    DateTime
 
   @@id([identifier, token])
+  @@schema("public")
 }
 
 model Authenticator {
@@ -95,13 +121,16 @@ model Authenticator {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
+  @@schema("public")
 }
 
-// MODELS FOR APP ////////////////////////////////////////////////////////////////////////////
+// ## SCHEMA : public START /////////////////////////////////////////////////////////////////////////
+// // MODELS FOR APP START ////////////////////////////////////////////////////////////////////////////
 model vpc {
   id              String        @id
   vpc_name        String
-  node            String
+  nodes           nodes         @relation(fields: [nodeId], references: [id])
+  nodeId          String
   network         String
   cidr            String // @unique
   gateway         String
@@ -112,17 +141,22 @@ model vpc {
   UserDataId      String
   available_vpc   available_vpc @relation(fields: [available_vpcId], references: [id], onDelete: Cascade)
   available_vpcId String        @unique
+
+  @@schema("public")
 }
 
 enum CONTAINER_STATE {
   STARTED
   STOPPED
+
+  @@schema("public")
 }
 
 model containers {
   name          String          @id
   nick_name     String?
-  node          String
+  nodes         nodes           @relation(fields: [nodeId], references: [id])
+  nodeId        String
   image         String
   tag           String
   state         CONTAINER_STATE
@@ -138,11 +172,14 @@ model containers {
   ssh_config_id String          @unique
   ssh_keys      ssh_keys        @relation(fields: [ssh_keysId], references: [id])
   ssh_keysId    String
+
+  @@schema("public")
 }
 
 model inbound_rules {
   id                   String     @id @default(cuid())
-  node                 String
+  nodes                nodes      @relation(fields: [nodeId], references: [id])
+  nodeId               String
   rule_name            String // it is config_name in nginx infra. backend
   domain_name          String     @unique
   service_protocol     String
@@ -156,16 +193,21 @@ model inbound_rules {
   containersName       String
   cloudflare_zone      String
   cloudflare_record_id String
+
+  @@schema("public")
 }
 
 model available_vpc {
   id      String  @id @default(cuid())
-  node    String
   cidr    String
   network String
   gateway String
   used    Boolean
   vpc     vpc?
+  nodes   nodes   @relation(fields: [nodeId], references: [id])
+  nodeId  String
+
+  @@schema("public")
 }
 
 model ssh_config {
@@ -180,6 +222,8 @@ model ssh_config {
   containers                  containers?
   available_ssh_proxy_ports   available_ssh_proxy_ports @relation(fields: [available_ssh_proxy_portsId], references: [id], onDelete: Cascade)
   available_ssh_proxy_portsId String                    @unique
+
+  @@schema("public")
 }
 
 model available_ssh_proxy_ports {
@@ -188,6 +232,8 @@ model available_ssh_proxy_ports {
   ssh_proxy_port      Int
   used                Boolean
   ssh_config          ssh_config?
+
+  @@schema("public")
 }
 
 model ssh_keys {
@@ -200,6 +246,8 @@ model ssh_keys {
   UserData    UserData     @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
   UserDataId  String
   containers  containers[]
+
+  @@schema("public")
 }
 
 model resources_limit {
@@ -209,16 +257,55 @@ model resources_limit {
   ssh_key_limit      Int       @default(2)
   inbound_rule_limit Int       @default(5)
   UserData           UserData?
+
+  @@schema("public")
 }
 
-// model available_node {
-//   id        String @id @default(cuid())
-//   node_name String
-//   node_ip   String @unique
-// }
+// // MODELS FOR APP END ////////////////////////////////////////////////////////////////////////////
+// ## SCHEMA : public END //////////////////////////////////////////////////////////////////////////////
 
-// model cloudflare_zones{
-//   id          String @id @default(cuid())
-//   zone_name   String
-//   zone_id     String
+// ## SCHEMA : nodes START /////////////////////////////////////////////////////////////////////////////
+enum NODE_TYPE {
+  FREE
+  PREMIUM
+
+  @@schema("nodes")
+}
+
+model nodes {
+  id             String          @id @default(cuid())
+  node_name      String          @unique
+  node_ip        String          @unique
+  node_type      NODE_TYPE
+  available_vpc  available_vpc[]
+  inbound_rules  inbound_rules[]
+  node_resources node_resources?
+  containers     containers[]
+  vpc            vpc[]
+
+  @@schema("nodes")
+}
+
+model node_resources {
+  id           String @id @default(cuid())
+  total_cpu    Int
+  total_memory Int
+  total_disk   Int
+  used_cpu     Int
+  used_memory  Int
+  used_disk    Int
+  nodes        nodes  @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  nodeId       String @unique
+
+  @@schema("nodes")
+}
+
+// ## SCHEMA : nodes END //////////////////////////////////////////////////////////////////////////////
+
+// model cloudflare_zones {
+//   id        String @id @default(cuid())
+//   zone_name String
+//   zone_id   String
+
+//   @@schema("nodes")
 // }

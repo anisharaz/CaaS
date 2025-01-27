@@ -1,5 +1,5 @@
 - name: Nginx configuration
-  hosts: docker_host
+  hosts: "{{ dockerHostName  }}"
   gather_facts: false
   tasks:
     - name: Create nginx configuration file
