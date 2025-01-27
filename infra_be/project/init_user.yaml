@@ -1,5 +1,5 @@
 - name: Ssh keys folder
-  hosts: docker_host
+  hosts: "{{ userDefaultVPCNodeName }}"
   tasks:
     - name: Create directory for ssh keys
       ansible.builtin.file:

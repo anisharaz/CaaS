@@ -42,6 +42,9 @@ export async function createInboundRule({
     const container = await prisma.containers.findUnique({
       where: {
         name: container_name
+      },
+      include: {
+        nodes: true
       }
     })
 
@@ -59,9 +62,12 @@ export async function createInboundRule({
       throw new Error("Domain already in use")
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let create_dns: any = null
+
     if (process.env.MODE === "prod") {
       // Task 1: Create DNS record
-      const create_dns = await CfClient.dns.records.create({
+      create_dns = await CfClient.dns.records.create({
         type: "A",
         zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
         name: domain_name,
@@ -75,10 +81,10 @@ export async function createInboundRule({
       }
     }
 
-    // Task 2: Create Inbound rule ini database
+    // Task 2: Create Inbound rule in database
     const res = await prisma.inbound_rules.create({
       data: {
-        node: "oracle_arm",
+        nodeId: container.nodes.id,
         rule_name: config_name,
         domain_name: domain_name,
         service_protocol: "http",
@@ -101,7 +107,8 @@ export async function createInboundRule({
         protocol: "http",
         ip: container?.ip_address,
         port: container_port,
-        container_name: container?.name
+        container_name: container?.name,
+        dockerHostName: container.nodes.node_name
       }
     )
     if (createInboundRulesResponse.data.return_code !== 0) {
@@ -173,6 +180,9 @@ export async function editInboundRule({
     const container = await prisma.containers.findUnique({
       where: {
         name: inbound_rule?.containersName
+      },
+      include: {
+        nodes: true
       }
     })
 
@@ -186,7 +196,8 @@ export async function editInboundRule({
         protocol: "http",
         ip: container?.ip_address,
         port: container_port,
-        container_name: container?.name
+        container_name: container?.name,
+        dockerHostName: container?.nodes.node_name
       }
     )
     if (editInboundRulesResponse.data.return_code !== 0) {
@@ -254,6 +265,9 @@ export async function deleteInboundRule({
       where: {
         id: inbound_rule_id,
         UserDataId: user?.UserData?.id as string
+      },
+      include: {
+        nodes: true
       }
     })
     if (!rule) {
@@ -266,7 +280,8 @@ export async function deleteInboundRule({
       {
         data: {
           config_id: rule.id,
-          container_name: rule?.containersName
+          container_name: rule?.containersName,
+          dockerHostName: rule.nodes.node_name
         }
       }
     )

@@ -65,7 +65,7 @@ export async function createVPC({ vpc_name }: { vpc_name: string }) {
         data: {
           id: networkID,
           vpc_name: vpc_name,
-          node: "oracle_arm",
+          nodeId: availableVPC.nodeId,
           network: availableVPC?.network as string,
           cidr: availableVPC?.cidr as string,
           gateway: availableVPC?.gateway as string,

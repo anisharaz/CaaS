@@ -3,6 +3,7 @@ import UsernameInput from "./username_form"
 import prisma from "@/lib/db"
 import { auth } from "@/auth"
 import { permanentRedirect } from "next/navigation"
+import { $Enums } from "@prisma/client"
 
 async function WelcomePage() {
   const session = await auth()
@@ -14,7 +15,11 @@ async function WelcomePage() {
       UserData: true
     }
   })
-  if (user?.UserData?.welcomed) {
+
+  if (
+    user?.UserData?.user_state === $Enums.USER_STATE.ACTIVE ||
+    user?.UserData?.user_state === $Enums.USER_STATE.SETTING_UP
+  ) {
     permanentRedirect("/console")
   }
   return (

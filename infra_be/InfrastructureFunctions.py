@@ -39,7 +39,7 @@ import time
 
 load_dotenv()
 
-
+# TODO:use database to create docker_client in each functions separately
 docker_client = DockerClient(base_url=os.environ.get("DOCKER_HOST"))
 
 

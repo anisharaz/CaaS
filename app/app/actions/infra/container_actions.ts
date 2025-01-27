@@ -155,7 +155,8 @@ export async function deleteContainer({
         UserDataId: user?.UserData?.id as string
       },
       include: {
-        ssh_config: true
+        ssh_config: true,
+        nodes: true
       }
     })
     if (!container) {
@@ -181,7 +182,8 @@ export async function deleteContainer({
       {
         data: {
           userData_id: user?.UserData?.id,
-          container_name: container_name
+          container_name: container_name,
+          dockerHostName: container.nodes.node_name
         }
       }
     )
@@ -193,7 +195,8 @@ export async function deleteContainer({
     // TODO: add fall
     await axios.delete(INFRA_BE_URL + "/sshtunnel", {
       data: {
-        ssh_tunnel_pid: container.ssh_config.ssh_tunnel_process_id
+        ssh_tunnel_pid: container.ssh_config.ssh_tunnel_process_id,
+        ssh_proxy_node_name: container.ssh_config.ssh_proxy_node_name
       }
     })
 
@@ -317,6 +320,9 @@ export async function createContainer({
       where: {
         id: vpc_id,
         UserDataId: user?.UserData?.id as string
+      },
+      include: {
+        nodes: true
       }
     })
     const sshKey = await prisma.ssh_keys.findUnique({
@@ -367,7 +373,8 @@ export async function createContainer({
       {
         userData_id: user?.UserData?.id,
         ssh_public_key: sshKey.public_key,
-        container_name: ContainerName
+        container_name: ContainerName,
+        dockerHostName: vpc.nodes.node_name
       }
     )
     if (create_authorized_key.data.return_code !== 0) {
@@ -395,7 +402,9 @@ export async function createContainer({
       ssh_proxy_port: available_ssh_proxy_port?.ssh_proxy_port,
       container_ip: createContainerResponse.data.container_ip,
       node_name: available_ssh_proxy_port?.ssh_proxy_node_name,
-      ssh_tunnel_pid: 0
+      ssh_tunnel_pid: 0,
+      dockerHostName: vpc.nodes.node_name,
+      ssh_proxy_node_name: available_ssh_proxy_port.ssh_proxy_node_name
     })
     if (sshTunnelResponse.data.return_code !== 0) {
       throw new Error("Error, Failed to create ssh tunnel")
@@ -428,7 +437,7 @@ export async function createContainer({
         data: {
           name: ContainerName,
           nick_name: container_name,
-          node: "oracle_arm",
+          nodeId: vpc.nodes.id,
           image: "aaraz/caas",
           tag: "1.2",
           state: $Enums.CONTAINER_STATE.STARTED,

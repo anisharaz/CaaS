@@ -1,5 +1,5 @@
 - name: Stop ssh tunnel
-  hosts: ssh_proxy
+  hosts: "{{ ssh_proxy_node_name }}"
   gather_facts: false
   tasks:
     - name: Stop ssh tunnel
