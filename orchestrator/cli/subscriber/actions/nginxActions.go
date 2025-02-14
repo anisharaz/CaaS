@@ -1,34 +1,26 @@
-package main
+package actions
 
 import (
-	models_dockeractions "aarazcaas/orchistrator/models/dockeractions"
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type testData struct {
-	Title  string `json:"title"`
-	Body   string `json:"body"`
-	UserId string `json:"userId"`
-}
-
-func dockerActionsSubscriber(conn *amqp.Connection) {
+func NginxActionsSubscriber(conn *amqp.Connection) {
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 	defer conn.Close()
 
 	q, err := ch.QueueDeclare(
-		"docker_actions", // name
-		true,             // durable
-		false,            // delete when unused
-		false,            // exclusive
-		false,            // no-wait
-		nil,              // arguments
+		"nginx_actions", // name
+		true,            // durable
+		false,           // delete when unused
+		false,           // exclusive
+		false,           // no-wait
+		nil,             // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 
@@ -62,8 +54,10 @@ func dockerActionsSubscriber(conn *amqp.Connection) {
 		for {
 			select {
 			case work := <-works:
-				go dockerActionsWorker(acks, &work)
+				go nginxActionsWorker(acks, &work)
 			case ack := <-acks:
+				// The false in the Ack() function states that it should only acknowledge this single message
+				// If true it will ack all message if they are not processed
 				ackError := ack.Ack(false)
 				if ackError != nil {
 					log.Fatalf("Ack error: %v", ackError)
@@ -72,7 +66,7 @@ func dockerActionsSubscriber(conn *amqp.Connection) {
 		}
 	}()
 
-	log.Printf("[*] Waiting for messages. To exit press CTRL+C")
+	log.Printf("LISTENING-- nginx actions")
 
 	select {
 	case connError := <-notifyConnClosed:
@@ -82,39 +76,19 @@ func dockerActionsSubscriber(conn *amqp.Connection) {
 	}
 }
 
-func dockerActionsWorker(acks chan<- *amqp.Delivery, work *amqp.Delivery) {
-	// client := resty.New()
-	var workData models_dockeractions.CreateContainerData
+func nginxActionsWorker(acks chan<- *amqp.Delivery, work *amqp.Delivery) {
+	var workData map[string]interface{}
 
 	err := json.Unmarshal(work.Body, &workData)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
-	switch workData.Action {
+	switch workData["action"] {
 	case "create":
 		fmt.Println(string(work.Body))
-		time.Sleep(time.Second * 2)
-		fmt.Println("end")
 	default:
 		fmt.Println("Unknown action")
 	}
 	acks <- work
-}
-
-// TASKS ----------------------------------------------------------------------------------------
-func createAuthorizedKeys() {
-
-}
-
-func createContainer() {
-
-}
-
-func createSSHTunnel() {
-
-}
-
-func updateDataBase() {
-
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	subscriberActions "aarazcaas/orchistrator/cli/subscriber/actions"
 	"log"
 	"sync"
 
@@ -20,9 +21,17 @@ func main() {
 
 	var subscribersWaitGroup sync.WaitGroup
 
-	// Docker actions subscriber
 	subscribersWaitGroup.Add(1)
-	go dockerActionsSubscriber(conn)
+	go subscriberActions.DockerActionsSubscriber(conn)
+
+	subscribersWaitGroup.Add(1)
+	go subscriberActions.DnsActionsSubscriber(conn)
+
+	subscribersWaitGroup.Add(1)
+	go subscriberActions.NginxActionsSubscriber(conn)
+
+	subscribersWaitGroup.Add(1)
+	go subscriberActions.InitUserkerActionsSubscriber(conn)
 
 	subscribersWaitGroup.Wait()
 }

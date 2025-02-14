@@ -40,29 +40,12 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	type createContainerData struct {
-		Action           string `json:"action"`
-		UserDataId       string `json:"userDataId"`
-		SshPublicKey     string `json:"sshPublicKey"`
-		ContainerName    string `json:"containerName"`
-		DockerHostName   string `json:"DockerHostName"`
-		ContainerImage   string `json:"containerImage"`
-		ContainerTag     string `json:"containerTag"`
-		ContainerNetwork string `json:"containerNetwork"`
-		SshProxyPort     string `json:"sshProxyPort"`
-		SshProxyNode     string `json:"sshProxyNode"`
-	}
-	data := createContainerData{
-		Action:           "create",
-		UserDataId:       "1",
-		SshPublicKey:     "xyz",
-		ContainerName:    "test",
-		DockerHostName:   "oracle_arm",
-		ContainerImage:   "ubuntu",
-		ContainerTag:     "latest",
-		ContainerNetwork: "loc",
-		SshProxyPort:     "22",
-		SshProxyNode:     "azure",
+	data := map[string]interface{}{
+		"action":         "create",
+		"userData_id":    "data",
+		"ssh_public_key": "data",
+		"container_name": "data",
+		"dockerHostName": "data",
 	}
 	jsonData, _ := json.Marshal(data)
 	err = ch.PublishWithContext(ctx,
