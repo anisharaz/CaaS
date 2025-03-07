@@ -1,15 +1,31 @@
 package actions
 
 import (
+	"aarazcaas/orchistrator/cli/database"
+	"aarazcaas/orchistrator/cli/database/models"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	"gorm.io/gorm/clause"
 )
+
+type ackMessage struct {
+	ack     *amqp.Delivery
+	success bool
+}
+
+type action_create_state struct {
+	authorized_keys bool
+	container       bool
+	ssh_tunnel      bool
+	database_entry  bool
+}
 
 func DockerActionsSubscriber(conn *amqp.Connection) {
 	ch, err := conn.Channel()
@@ -45,7 +61,8 @@ func DockerActionsSubscriber(conn *amqp.Connection) {
 	)
 
 	failOnError(err, "Failed to register a consumer")
-	acks := make(chan *amqp.Delivery)
+
+	acks := make(chan *ackMessage)
 
 	notifyConnClosed := make(chan *amqp.Error)
 	conn.NotifyClose(notifyConnClosed)
@@ -58,13 +75,21 @@ func DockerActionsSubscriber(conn *amqp.Connection) {
 			select {
 			case work := <-works:
 				go dockerActionsWorker(acks, &work)
-			case ack := <-acks:
+			case ackMessage := <-acks:
 				// The false in the Ack() function states that it should only acknowledge this single message
 				// If true it will ack all message if they are not processed
-				ackError := ack.Ack(false)
-				if ackError != nil {
-					log.Fatalf("Ack error: %v", ackError)
+				if ackMessage.success {
+					ackError := ackMessage.ack.Ack(false)
+					if ackError != nil {
+						log.Fatalf("Ack error: %v", ackError)
+					}
+				} else {
+					ackError := ackMessage.ack.Reject(true)
+					if ackError != nil {
+						log.Fatalf("Ack error: %v", ackError)
+					}
 				}
+
 			}
 		}
 	}()
@@ -79,7 +104,7 @@ func DockerActionsSubscriber(conn *amqp.Connection) {
 	}
 }
 
-func dockerActionsWorker(acks chan<- *amqp.Delivery, work *amqp.Delivery) {
+func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 	var workData map[string]interface{}
 
 	err := json.Unmarshal(work.Body, &workData)
@@ -87,28 +112,97 @@ func dockerActionsWorker(acks chan<- *amqp.Delivery, work *amqp.Delivery) {
 		fmt.Println("Error:", err)
 		return
 	}
+	retryCount := 3
+	total_task_success := false
 	switch workData["action"] {
 	case "create":
-		fmt.Println(string(work.Body))
-		ok, err := createAuthorizedKeys(&map[string]interface{}{
-			"userData_id":    workData["userData_id"],
-			"ssh_public_key": workData["ssh_public_key"],
-			"container_name": workData["container_name"],
-			"dockerHostName": workData["dockerHostName"],
-		})
-		if !ok {
-			fmt.Println(err)
+		var state *action_create_state = nil
+		for retryCount > 0 {
+			if state == nil {
+				state = &action_create_state{
+					authorized_keys: false,
+					container:       false,
+					ssh_tunnel:      false,
+					database_entry:  false,
+				}
+				db := database.GetDB()
+
+				// 1. creating authorized keys
+				okCreateAuthorizedKeys, _ := createAuthorizedKeys(&map[string]interface{}{
+					"userData_id":    workData["userData_id"],
+					"ssh_public_key": workData["ssh_public_key"],
+					"container_name": workData["container_name"],
+					"dockerHostName": workData["dockerHostName"],
+				})
+				if okCreateAuthorizedKeys {
+					state.authorized_keys = true
+				}
+
+				// 2. creating container
+				okCreateContainer, containerIp, _ := createContainer(&map[string]interface{}{
+					"container_name": workData["container_name"],
+					"image":          workData["image"],
+					"tag":            workData["tag"],
+					"network":        workData["network"],
+					"storage":        workData["storage"],
+					"userData_id":    workData["userData_id"],
+				})
+				if okCreateContainer {
+					state.container = true
+				}
+
+				// 3. creating ssh tunnel
+				tx := db.Begin()
+				available_ssh_proxy_port := models.Available_ssh_proxy_ports{Used: false}
+				tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).First(&available_ssh_proxy_port)
+				okCreateSSHTunnel, tunnelPid, _ := createSSHTunnel(&map[string]interface{}{
+					"ssh_proxy_port": available_ssh_proxy_port.Ssh_proxy_port,
+					"container_ip":   workData["container_ip"],
+					"node_name":      available_ssh_proxy_port.Ssh_proxy_node_name,
+					"ssh_tunnel_pid": 0,
+					"dockerHostName": containerIp,
+				})
+				if okCreateSSHTunnel {
+					state.ssh_tunnel = true
+				}
+
+				// 4. Updating database
+				available_ssh_proxy_port.Used = true
+				ssh_config := models.Ssh_config{
+					Ssh_proxy_node_name:         available_ssh_proxy_port.Ssh_proxy_node_name,
+					Ssh_proxy_port:              uint32(available_ssh_proxy_port.Ssh_proxy_port),
+					Ssh_tunnel_process_id:       uint32(tunnelPid),
+					UserDataId:                  workData["userData_id"].(string),
+					Available_ssh_proxy_portsId: available_ssh_proxy_port.ID,
+				}
+				tx.Create(&ssh_config)
+				tx.Save(&available_ssh_proxy_port)
+				if tx.Commit().Error != nil {
+					state.database_entry = false
+				}
+
+				if state.authorized_keys && state.container && state.ssh_tunnel && state.database_entry {
+					total_task_success = true
+					break
+				} else {
+					retryCount--
+				}
+			} else {
+				// TODO: retry failed actions in the task
+			}
 		}
+
+	case "delete":
 	default:
 		fmt.Println("Unknown action")
 	}
-	acks <- work
+
+	acks <- &ackMessage{ack: work, success: total_task_success}
 }
 
-// create container tasks ----------------------------------------------------------------------------------------
 func createAuthorizedKeys(data *map[string]interface{}) (bool, error) {
 	dataBytes, _ := json.Marshal(data)
-	req, err := http.NewRequest(http.MethodPost, "http://localhost:3000", bytes.NewReader(dataBytes))
+	req, err := http.NewRequest(http.MethodPost, InfraBeUrl+"/authorized_keys", bytes.NewReader(dataBytes))
 	if err != nil {
 		return false, err
 	}
@@ -123,14 +217,44 @@ func createAuthorizedKeys(data *map[string]interface{}) (bool, error) {
 	return true, nil
 }
 
-// func createContainer(data *map[string]interface{}) (bool, error) {
+func createContainer(data *map[string]interface{}) (bool, string, error) {
+	dataBytes, _ := json.Marshal(data)
+	req, err := http.NewRequest(http.MethodPost, InfraBeUrl+"/container", bytes.NewReader(dataBytes))
+	if err != nil {
+		return false, "", err
+	}
+	req.Header.Set("content-type", "application/json")
+	res, err := HttpMainClient.Do(req)
+	if err != nil {
+		return false, "", err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return false, "", errors.New("failed")
+	}
+	return true, "", nil
+}
 
-// }
-
-// func createSSHTunnel() (bool, error) {
-
-// }
-
-// func updateDataBase() (bool, error) {
-
-// }
+func createSSHTunnel(data *map[string]interface{}) (bool, int16, error) {
+	dataBytes, _ := json.Marshal(data)
+	req, err := http.NewRequest(http.MethodPost, InfraBeUrl+"/sshtunnel", bytes.NewReader(dataBytes))
+	if err != nil {
+		return false, 0, err
+	}
+	req.Header.Set("content-type", "application/json")
+	res, err := HttpMainClient.Do(req)
+	if err != nil {
+		return false, 0, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return false, 0, errors.New("failed")
+	}
+	body, _ := io.ReadAll(res.Body)
+	var bodyJson map[string]interface{}
+	err = json.Unmarshal(body, &bodyJson)
+	if err != nil {
+		return false, 0, err
+	}
+	return true, bodyJson["ssh_tunnel_pid"].(int16), nil
+}

@@ -15,6 +15,7 @@ datasource db {
   schemas  = ["public", "nodes"]
 }
 
+// ** SCHEMA : public START /////////////////////////////////////////////////////////////////////////
 model User {
   // For AUTH
   id            String          @id @default(cuid())
@@ -124,8 +125,7 @@ model Authenticator {
   @@schema("public")
 }
 
-// ## SCHEMA : public START /////////////////////////////////////////////////////////////////////////
-// // MODELS FOR APP START ////////////////////////////////////////////////////////////////////////////
+// ** MODELS FOR APP START ////////////////////////////////////////////////////////////////////////////
 model vpc {
   id              String        @id
   vpc_name        String
@@ -152,26 +152,35 @@ enum CONTAINER_STATE {
   @@schema("public")
 }
 
+enum provision_status {
+  PENDING
+  SUCCESS
+  FAILED
+
+  @@schema("public")
+}
+
 model containers {
-  name          String          @id
-  nick_name     String?
-  nodes         nodes           @relation(fields: [nodeId], references: [id])
-  nodeId        String
-  image         String
-  tag           String
-  state         CONTAINER_STATE
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  vpc           vpc             @relation(fields: [vpcId], references: [id], onDelete: Cascade)
-  vpcId         String
-  ip_address    String
-  inbound_rules inbound_rules[]
-  UserData      UserData        @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
-  UserDataId    String
-  ssh_config    ssh_config      @relation(fields: [ssh_config_id], references: [id], onDelete: Cascade)
-  ssh_config_id String          @unique
-  ssh_keys      ssh_keys        @relation(fields: [ssh_keysId], references: [id])
-  ssh_keysId    String
+  name             String           @id
+  nick_name        String?
+  nodes            nodes            @relation(fields: [nodeId], references: [id])
+  nodeId           String
+  image            String
+  tag              String
+  state            CONTAINER_STATE
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  vpc              vpc              @relation(fields: [vpcId], references: [id], onDelete: Cascade)
+  vpcId            String
+  ip_address       String
+  inbound_rules    inbound_rules[]
+  UserData         UserData         @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+  UserDataId       String
+  ssh_config       ssh_config       @relation(fields: [ssh_config_id], references: [id], onDelete: Cascade)
+  ssh_config_id    String           @unique
+  ssh_keys         ssh_keys         @relation(fields: [ssh_keysId], references: [id])
+  ssh_keysId       String
+  provision_status provision_status @default(PENDING)
 
   @@schema("public")
 }
@@ -261,10 +270,11 @@ model resources_limit {
   @@schema("public")
 }
 
-// // MODELS FOR APP END ////////////////////////////////////////////////////////////////////////////
-// ## SCHEMA : public END //////////////////////////////////////////////////////////////////////////////
+// ** MODELS FOR APP END ////////////////////////////////////////////////////////////////////////////
 
-// ## SCHEMA : nodes START /////////////////////////////////////////////////////////////////////////////
+// ** SCHEMA : public END //////////////////////////////////////////////////////////////////////////////
+
+// ** SCHEMA : nodes START /////////////////////////////////////////////////////////////////////////////
 enum NODE_TYPE {
   FREE
   PREMIUM
@@ -300,7 +310,7 @@ model node_resources {
   @@schema("nodes")
 }
 
-// ## SCHEMA : nodes END //////////////////////////////////////////////////////////////////////////////
+// ** SCHEMA : nodes END //////////////////////////////////////////////////////////////////////////////
 
 // model cloudflare_zones {
 //   id        String @id @default(cuid())

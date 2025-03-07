@@ -5,7 +5,7 @@ import { inbound_rules_schema } from "@/lib/zod"
 import { INFRA_BE_URL } from "@/lib/vars"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import { CfClient } from "@/lib/cloudflare."
+import { CfClient } from "@/lib/cloudflare"
 
 export async function createInboundRule({
   domain_name,

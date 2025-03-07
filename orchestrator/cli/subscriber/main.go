@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aarazcaas/orchistrator/cli/database"
 	subscriberActions "aarazcaas/orchistrator/cli/subscriber/actions"
 	"log"
 	"sync"
@@ -18,6 +19,10 @@ func main() {
 	// Connect to RabbitMQ
 	conn, err := amqp.Dial("amqp://admin:wghncufxc8@192.168.122.2:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
+
+	// Connect to DB
+	err = database.ConnectDB()
+	failOnError(err, "Failed to connect to DB")
 
 	var subscribersWaitGroup sync.WaitGroup
 
