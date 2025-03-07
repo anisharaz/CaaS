@@ -22,6 +22,11 @@ This project is build with an aim to replace VMs with containers in a cloud envi
 
 ![Untitled-2024-06-23-1246](https://github.com/user-attachments/assets/7494d168-b900-4050-89a2-0240182d775d)
 
+<br>
+
+![Untitled-2024-06-23-1246](https://github.com/user-attachments/assets/c0e8474f-9c31-48ed-8149-07a91edbf89c)
+
+
 > [!NOTE]
 > Setting Up the prject [GUIDE](https://caas.aaraz.me/documentation/projectsetup)
 
