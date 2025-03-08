@@ -49,19 +49,20 @@ enum USER_STATE {
 }
 
 model UserData {
-  id                String          @id @default(cuid())
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId            String          @unique
-  username          String?
-  user_state        USER_STATE      @default(NEW)
-  vpc               vpc[]
-  inbound_rules     inbound_rules[]
-  containers        containers[]
-  ssh_config        ssh_config[]
-  ssh_keys          ssh_keys[]
-  resources_limit   resources_limit @relation(fields: [resources_limitId], references: [id], onDelete: Cascade)
-  resources_limitId String          @unique
-  user_type         USER_TYPE       @default(FREE)
+  id                   String                 @id @default(cuid())
+  user                 User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String                 @unique
+  username             String?
+  user_state           USER_STATE             @default(NEW)
+  vpc                  vpc[]
+  inbound_rules        inbound_rules[]
+  containers           containers[]
+  ssh_config           ssh_config[]
+  ssh_keys             ssh_keys[]
+  resources_limit      resources_limit        @relation(fields: [resources_limitId], references: [id], onDelete: Cascade)
+  resources_limitId    String                 @unique
+  user_type            USER_TYPE              @default(FREE)
+  containers_scheduled containers_scheduled[]
 
   @@schema("public")
 }
@@ -159,6 +160,27 @@ enum provision_status {
   @@schema("public")
 }
 
+// containers_scheduled model holds the container details which are 
+// scheduled for provisioning by the orchestrator once the container
+// is provisioned, item will be removed from this table and entry is 
+// made in the containers table
+model containers_scheduled {
+  id             String   @id @default(cuid())
+  UserData       UserData @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+  UserDataId     String
+  ssh_keys       ssh_keys @relation(fields: [ssh_keysId], references: [id])
+  ssh_keysId     String
+  container_name String
+  nodes          nodes    @relation(fields: [nodeId], references: [id])
+  nodeId         String
+  image          String
+  tag            String
+  network        String
+  storage        String
+
+  @@schema("public")
+}
+
 model containers {
   name             String           @id
   nick_name        String?
@@ -245,15 +267,16 @@ model available_ssh_proxy_ports {
 }
 
 model ssh_keys {
-  id          String       @id @default(cuid())
-  nick_name   String
-  public_key  String
-  private_key String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  UserData    UserData     @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
-  UserDataId  String
-  containers  containers[]
+  id                   String                 @id @default(cuid())
+  nick_name            String
+  public_key           String
+  private_key          String
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  UserData             UserData               @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+  UserDataId           String
+  containers           containers[]
+  containers_scheduled containers_scheduled[]
 
   @@schema("public")
 }
@@ -282,15 +305,16 @@ enum NODE_TYPE {
 }
 
 model nodes {
-  id             String          @id @default(cuid())
-  node_name      String          @unique
-  node_ip        String          @unique
-  node_type      NODE_TYPE
-  available_vpc  available_vpc[]
-  inbound_rules  inbound_rules[]
-  node_resources node_resources?
-  containers     containers[]
-  vpc            vpc[]
+  id                   String                 @id @default(cuid())
+  node_name            String                 @unique
+  node_ip              String                 @unique
+  node_type            NODE_TYPE
+  available_vpc        available_vpc[]
+  inbound_rules        inbound_rules[]
+  node_resources       node_resources?
+  containers           containers[]
+  vpc                  vpc[]
+  containers_scheduled containers_scheduled[]
 
   @@schema("nodes")
 }

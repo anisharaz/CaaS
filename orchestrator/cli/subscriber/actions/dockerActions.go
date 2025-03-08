@@ -107,6 +107,7 @@ func DockerActionsSubscriber(conn *amqp.Connection) {
 }
 
 func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
+	// TODO: the work data is now in database and only id of the record and type of actions is received in the workdata, so update to code to fetch the data of workdata from db
 	var workData map[string]interface{}
 	db := database.GetDB()
 	err := json.Unmarshal(work.Body, &workData)
@@ -156,6 +157,7 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 			}
 
 			// 2. creating container
+			var containerIp string
 			for b := 0; b < 2; b++ {
 				okCreateContainer, containerIp, _ := createContainer(&map[string]interface{}{
 					"container_name": workData["container_name"],
@@ -180,7 +182,7 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 			for c := 0; c < 2; c++ {
 				okCreateSSHTunnel, tunnelPid, _ := createSSHTunnel(&map[string]interface{}{
 					"ssh_proxy_port": available_ssh_proxy_port.Ssh_proxy_port,
-					"container_ip":   workData["container_ip"],
+					"container_ip":   containerIp,
 					"node_name":      available_ssh_proxy_port.Ssh_proxy_node_name,
 					"ssh_tunnel_pid": 0,
 					"dockerHostName": state.container_ip,
@@ -207,8 +209,8 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 
 			tx.Create(&ssh_config)
 			available_ssh_proxy_port.Used = true
+			// TODO: add code to add create record in container table
 			tx.Save(&available_ssh_proxy_port)
-
 			if tx.Commit().Error != nil {
 				// * The known problem here is that, the tx commit is failed but
 				// * the ssh tunnel is created and while the tunnel is being deleted
@@ -303,15 +305,18 @@ func createSSHTunnel(data *map[string]interface{}) (bool, int16, error) {
 
 func compensate_CreateAuthorizedKeys() {
 	// TODO: implement this function
+	fmt.Println("compensate_CreateAuthorizedKeys")
 }
 
 func compensate_CreateContainer() {
 	// TODO: implement this function
 	compensate_CreateAuthorizedKeys()
+	fmt.Println("compensate_CreateContainer")
 }
 
 func compensate_CreateSSHTunnel() {
 	// TODO: implement this function
 	compensate_CreateContainer()
 	compensate_CreateAuthorizedKeys()
+	fmt.Println("compensate_CreateSSHTunnel")
 }

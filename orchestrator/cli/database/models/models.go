@@ -26,3 +26,13 @@ type Ssh_config struct {
 func (Ssh_config) TableName() string {
 	return "ssh_config"
 }
+
+// TODO: complete the struct and add other struct of tables required by the relations of this table
+type Containers struct {
+	Name             string `gorm:"primaryKey;column:id"`
+	Provision_status string `gorm:"column:provision_status"`
+}
+
+func (Containers) TableName() string {
+	return "containers"
+}

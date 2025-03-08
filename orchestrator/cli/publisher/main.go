@@ -1,6 +1,8 @@
 // This file is only used for sending data
 // to queue when developing orchestrator package
-// it is not made for production use
+// it is not made for production use, Update data sent
+// to queue as required for testing but before committing changes
+// change back this file to its original state
 
 package main
 
