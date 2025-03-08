@@ -155,7 +155,6 @@ enum CONTAINER_STATE {
 enum provision_status {
   PENDING
   SUCCESS
-  FAILED
 
   @@schema("public")
 }
