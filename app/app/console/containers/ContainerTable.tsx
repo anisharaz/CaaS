@@ -31,6 +31,8 @@ import Link from "next/link"
 import ContainerStatusBadge from "@/components/ContainerStatusBadge"
 import { toast } from "sonner"
 import Image from "next/image"
+
+// TODO: update the code to show provisioning state containers
 function ContainerTable({
   vpcs
 }: {

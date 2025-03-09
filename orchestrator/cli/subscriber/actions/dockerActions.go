@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"gorm.io/gorm/clause"
 )
@@ -21,12 +22,12 @@ type ackMessage struct {
 	success bool
 }
 
-type action_create_state struct {
-	authorized_keys bool
-	container       bool
-	container_ip    string
-	ssh_tunnel      bool
-	ssh_tunnel_pid  int16
+type stateOfTasksIn_action_create struct {
+	create_authorized_keys bool
+	create_container       bool
+	container_ip           string
+	create_ssh_tunnel      bool
+	ssh_tunnel_pid         int16
 }
 
 func DockerActionsSubscriber(conn *amqp.Connection) {
@@ -107,30 +108,41 @@ func DockerActionsSubscriber(conn *amqp.Connection) {
 }
 
 func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
-	// TODO: the work data is now in database and only id of the record and type of actions is received in the workdata, so update to code to fetch the data of workdata from db
-	var workData map[string]interface{}
-	db := database.GetDB()
+	var workData map[string]any
 	err := json.Unmarshal(work.Body, &workData)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
-	total_task_success := false
+	db := database.GetDB()
 	switch workData["action"] {
 	case "create":
+		var container_schedule_data = models.Containers_scheduled{
+			ID: workData["container_schedule_id"].(string),
+		}
+		db.Find(&container_schedule_data)
+		var ssh_keys = models.Ssh_keys{
+			ID: container_schedule_data.Ssh_keysId,
+		}
+		db.Find(&ssh_keys)
+		var dockerHostNode = models.Nodes{
+			ID: container_schedule_data.NodeId,
+		}
+		db.Find(&dockerHostNode)
+		total_task_success := false
 		tx := db.Begin()
 		available_ssh_proxy_port := models.Available_ssh_proxy_ports{Used: false}
 		tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).First(&available_ssh_proxy_port)
 
-		state := &action_create_state{
-			authorized_keys: false,
-			container:       false,
-			ssh_tunnel:      false,
+		state := &stateOfTasksIn_action_create{
+			create_authorized_keys: false,
+			create_container:       false,
+			create_ssh_tunnel:      false,
 		}
 		// one time loop, because we can prevent
 		// other task from proceeding if one of
 		// the task fails using break; statement
-		for i := 0; i < 1; i++ {
+		for range 1 {
 			// Pre-flight
 			sql, _ := db.DB()
 			if err := sql.Ping(); err != nil {
@@ -139,48 +151,48 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 				break
 			}
 
-			// 1. creating authorized keys
-			for a := 0; a < 2; a++ {
-				okCreateAuthorizedKeys, _ := createAuthorizedKeys(&map[string]interface{}{
-					"userData_id":    workData["userData_id"],
-					"ssh_public_key": workData["ssh_public_key"],
-					"container_name": workData["container_name"],
-					"dockerHostName": workData["dockerHostName"],
+			// TASK 1: create_authorized_keys
+			for range 2 {
+				okCreateAuthorizedKeys, _ := createAuthorizedKeys(&map[string]any{
+					"userData_id":    container_schedule_data.UserDataId,
+					"ssh_public_key": ssh_keys.PublicKey,
+					"container_name": container_schedule_data.Container_name,
+					"dockerHostName": dockerHostNode.Node_name,
 				})
 				if okCreateAuthorizedKeys {
-					state.authorized_keys = true
+					state.create_authorized_keys = true
 					break
 				}
 			}
-			if !state.authorized_keys {
+			if !state.create_authorized_keys {
 				break
 			}
 
-			// 2. creating container
+			// TASK 2: create_container
 			var containerIp string
-			for b := 0; b < 2; b++ {
-				okCreateContainer, containerIp, _ := createContainer(&map[string]interface{}{
-					"container_name": workData["container_name"],
-					"image":          workData["image"],
-					"tag":            workData["tag"],
-					"network":        workData["network"],
-					"storage":        workData["storage"],
-					"userData_id":    workData["userData_id"],
+			for range 2 {
+				okCreateContainer, containerIp, _ := createContainer(&map[string]any{
+					"container_name": container_schedule_data.Container_name,
+					"image":          container_schedule_data.Image,
+					"tag":            container_schedule_data.Tag,
+					"network":        container_schedule_data.Network,
+					"storage":        container_schedule_data.Storage,
+					"userData_id":    container_schedule_data.UserDataId,
 				})
 				if okCreateContainer {
-					state.container = true
+					state.create_container = true
 					state.container_ip = containerIp
 					break
 				}
 			}
-			if !state.container {
+			if !state.create_container {
 				compensate_CreateAuthorizedKeys()
 				break
 			}
 
-			// 3. creating ssh tunnel
-			for c := 0; c < 2; c++ {
-				okCreateSSHTunnel, tunnelPid, _ := createSSHTunnel(&map[string]interface{}{
+			// TASK 3: create_ssh_tunnel
+			for range 2 {
+				okCreateSSHTunnel, tunnelPid, _ := createSSHTunnel(&map[string]any{
 					"ssh_proxy_port": available_ssh_proxy_port.Ssh_proxy_port,
 					"container_ip":   containerIp,
 					"node_name":      available_ssh_proxy_port.Ssh_proxy_node_name,
@@ -188,30 +200,46 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 					"dockerHostName": state.container_ip,
 				})
 				if okCreateSSHTunnel {
-					state.ssh_tunnel = true
+					state.create_ssh_tunnel = true
 					state.ssh_tunnel_pid = tunnelPid
 					break
 				}
 			}
-			if !state.ssh_tunnel {
+			if !state.create_ssh_tunnel {
 				compensate_CreateContainer()
 				break
 			}
 
-			// 4. Updating database
+			// TASK 4: update database
+			available_ssh_proxy_port.Used = true
+			tx.Save(&available_ssh_proxy_port)
+
 			ssh_config := models.Ssh_config{
 				Ssh_proxy_node_name:         available_ssh_proxy_port.Ssh_proxy_node_name,
 				Ssh_proxy_port:              uint32(available_ssh_proxy_port.Ssh_proxy_port),
 				Ssh_tunnel_process_id:       uint32(state.ssh_tunnel_pid),
-				UserDataId:                  workData["userData_id"].(string),
+				UserDataId:                  container_schedule_data.UserDataId,
 				Available_ssh_proxy_portsId: available_ssh_proxy_port.ID,
 			}
-
 			tx.Create(&ssh_config)
-			available_ssh_proxy_port.Used = true
-			// TODO: add code to add create record in container table
-			tx.Save(&available_ssh_proxy_port)
+
+			container := models.Containers{
+				Name:             uuid.NewString(),
+				NodeId:           container_schedule_data.NodeId,
+				Image:            container_schedule_data.Image,
+				Tag:              container_schedule_data.Tag,
+				State:            "STARTED",
+				VpcId:            container_schedule_data.Network, // network name is the id of vpc table
+				Ip_address:       state.container_ip,
+				UserDataId:       container_schedule_data.UserDataId,
+				Ssh_config_id:    ssh_config.ID,
+				Ssh_keysId:       ssh_keys.ID,
+				Provision_status: "SUCCESS",
+			}
+			tx.Create(&container)
+
 			if tx.Commit().Error != nil {
+				// ! solution to this issue is needed
 				// * The known problem here is that, the tx commit is failed but
 				// * the ssh tunnel is created and while the tunnel is being deleted
 				// * by the compensate_CreateSSHTunnel() function, same ssh tunnel is
@@ -220,7 +248,6 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 				// * new task from the beginning and until another process reaches the
 				// * tunnel creation step, the compensate_CreateSSHTunnel() function
 				// * would have finished deleting the old tunnel which would prevent the conflict.
-				// TODO: solution to this issue is needed
 				compensate_CreateSSHTunnel()
 				break
 			}
@@ -244,7 +271,7 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 
 }
 
-func createAuthorizedKeys(data *map[string]interface{}) (bool, error) {
+func createAuthorizedKeys(data *map[string]any) (bool, error) {
 	dataBytes, _ := json.Marshal(data)
 	req, err := http.NewRequest(http.MethodPost, InfraBeUrl+"/authorized_keys", bytes.NewReader(dataBytes))
 	if err != nil {
@@ -261,7 +288,7 @@ func createAuthorizedKeys(data *map[string]interface{}) (bool, error) {
 	return true, nil
 }
 
-func createContainer(data *map[string]interface{}) (bool, string, error) {
+func createContainer(data *map[string]any) (bool, string, error) {
 	dataBytes, _ := json.Marshal(data)
 	req, err := http.NewRequest(http.MethodPost, InfraBeUrl+"/container", bytes.NewReader(dataBytes))
 	if err != nil {
@@ -276,10 +303,19 @@ func createContainer(data *map[string]interface{}) (bool, string, error) {
 	if res.StatusCode != 200 {
 		return false, "", errors.New("failed")
 	}
-	return true, "", nil
+	body, _ := io.ReadAll(res.Body)
+	var bodyJson struct {
+		Return_code  int8   `json:"return_code"`
+		Container_ip string `json:"container_ip"`
+	}
+	err = json.Unmarshal(body, &bodyJson)
+	if err != nil {
+		return false, "", err
+	}
+	return true, bodyJson.Container_ip, nil
 }
 
-func createSSHTunnel(data *map[string]interface{}) (bool, int16, error) {
+func createSSHTunnel(data *map[string]any) (bool, int16, error) {
 	dataBytes, _ := json.Marshal(data)
 	req, err := http.NewRequest(http.MethodPost, InfraBeUrl+"/sshtunnel", bytes.NewReader(dataBytes))
 	if err != nil {
@@ -295,12 +331,15 @@ func createSSHTunnel(data *map[string]interface{}) (bool, int16, error) {
 		return false, 0, errors.New("failed")
 	}
 	body, _ := io.ReadAll(res.Body)
-	var bodyJson map[string]interface{}
+	var bodyJson struct {
+		Return_code    int8  `json:"return_code"`
+		Ssh_tunnel_pid int32 `json:"ssh_tunnel_pid"`
+	}
 	err = json.Unmarshal(body, &bodyJson)
 	if err != nil {
 		return false, 0, err
 	}
-	return true, bodyJson["ssh_tunnel_pid"].(int16), nil
+	return true, int16(bodyJson.Ssh_tunnel_pid), nil
 }
 
 func compensate_CreateAuthorizedKeys() {

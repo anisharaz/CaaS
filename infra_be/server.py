@@ -52,6 +52,7 @@ from fastapi import FastAPI
 app = FastAPI()
 
 
+# TODO: update endpoint to return correct response code in case of failed request instead of just return_code of 1
 @app.post("/container")
 async def create_container(container: ContainerData) -> ContainerReturnData:
     return await CreateContainer(container)

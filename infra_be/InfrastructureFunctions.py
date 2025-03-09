@@ -39,7 +39,8 @@ import time
 
 load_dotenv()
 
-# TODO:use database to create docker_client in each functions separately
+# TODO: create a class which return the specific dockerclient, if not present it will create and return. The connection credentials will be stored in a separate database.
+# TODO: update functions to use dockerclient based on the request parameter `dockerHostName`
 docker_client = DockerClient(base_url=os.environ.get("DOCKER_HOST"))
 
 

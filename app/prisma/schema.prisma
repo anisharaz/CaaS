@@ -133,7 +133,7 @@ model vpc {
   nodes           nodes         @relation(fields: [nodeId], references: [id])
   nodeId          String
   network         String
-  cidr            String // @unique
+  cidr            String
   gateway         String
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -256,6 +256,7 @@ model ssh_config {
   @@schema("public")
 }
 
+// TODO: add schema to for multiple ssh_proxy_nodes, similar to docker host nodes schema
 model available_ssh_proxy_ports {
   id                  String      @id @default(cuid())
   ssh_proxy_node_name String
@@ -304,6 +305,7 @@ enum NODE_TYPE {
   @@schema("nodes")
 }
 
+// nodes are the docker host nodes
 model nodes {
   id                   String                 @id @default(cuid())
   node_name            String                 @unique

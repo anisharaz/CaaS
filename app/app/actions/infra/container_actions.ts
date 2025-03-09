@@ -192,7 +192,6 @@ export async function deleteContainer({
     }
 
     // Task 3: Delete the ssh tunnel
-    // TODO: add fall
     await axios.delete(INFRA_BE_URL + "/sshtunnel", {
       data: {
         ssh_tunnel_pid: container.ssh_config.ssh_tunnel_process_id,
