@@ -15,12 +15,12 @@ func InitUserkerActionsSubscriber(conn *amqp.Connection) {
 	defer conn.Close()
 
 	q, err := ch.QueueDeclare(
-		"inituser_actions", // name
-		true,               // durable
-		false,              // delete when unused
-		false,              // exclusive
-		false,              // no-wait
-		nil,                // arguments
+		"init_user_actions", // name
+		true,                // durable
+		false,               // delete when unused
+		false,               // exclusive
+		false,               // no-wait
+		nil,                 // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 

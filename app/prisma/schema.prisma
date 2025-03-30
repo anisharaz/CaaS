@@ -165,18 +165,19 @@ enum provision_status {
 // is provisioned, item will be removed from this table and entry is 
 // made in the containers table
 model containers_scheduled {
-  id             String   @id @default(cuid())
-  UserData       UserData @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
-  UserDataId     String
-  ssh_keys       ssh_keys @relation(fields: [ssh_keysId], references: [id])
-  ssh_keysId     String
-  container_name String
-  nodes          nodes    @relation(fields: [nodeId], references: [id])
-  nodeId         String
-  image          String
-  tag            String
-  network        String
-  storage        String
+  id                 String   @id @default(cuid())
+  UserData           UserData @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+  UserDataId         String
+  ssh_keys           ssh_keys @relation(fields: [ssh_keysId], references: [id])
+  ssh_keysId         String
+  name               String
+  nodes              nodes    @relation(fields: [nodeId], references: [id])
+  nodeId             String
+  image              String
+  tag                String
+  network            String
+  storage            String
+  container_nickname String
 
   @@schema("public")
 }
@@ -244,7 +245,7 @@ model ssh_config {
   id                          String                    @id @default(cuid())
   ssh_proxy_node_name         String
   ssh_proxy_port              Int
-  ssh_tunnel_process_id       Int
+  ssh_tunnel_process_id       BigInt
   createdAt                   DateTime                  @default(now())
   updatedAt                   DateTime                  @updatedAt
   UserData                    UserData                  @relation(fields: [UserDataId], references: [id])
@@ -321,16 +322,18 @@ model nodes {
   @@schema("nodes")
 }
 
+// based on this schema a premium container will be scheduled
 model node_resources {
-  id           String @id @default(cuid())
-  total_cpu    Int
-  total_memory Int
-  total_disk   Int
-  used_cpu     Int
-  used_memory  Int
-  used_disk    Int
-  nodes        nodes  @relation(fields: [nodeId], references: [id], onDelete: Cascade)
-  nodeId       String @unique
+  id                 String @id @default(cuid())
+  total_cpu          Int
+  total_memory       Int
+  total_disk         Int
+  available_cpu      Int
+  available_memory   Int
+  available_disk     Int
+  containers_running Int
+  nodes              nodes  @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  nodeId             String @unique
 
   @@schema("nodes")
 }

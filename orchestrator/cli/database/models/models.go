@@ -28,7 +28,7 @@ func (Ssh_config) TableName() string {
 }
 
 type Containers struct {
-	Name             string    `gorm:"primaryKey;column:id"`
+	Name             string    `gorm:"primaryKey;column:name"`
 	Nick_name        string    `gorm:"column:nick_name"`
 	NodeId           string    `gorm:"column:nodeId"`
 	Image            string    `gorm:"column:image"`
@@ -49,15 +49,16 @@ func (Containers) TableName() string {
 }
 
 type Containers_scheduled struct {
-	ID             string `gorm:"primaryKey;column:id"`
-	UserDataId     string `gorm:"column:UserDataId"`
-	Ssh_keysId     string `gorm:"column:ssh_keysId"`
-	Container_name string `gorm:"column:container_name"`
-	NodeId         string `gorm:"column:nodeId"`
-	Image          string `gorm:"column:image"`
-	Tag            string `gorm:"column:tag"`
-	Network        string `gorm:"column:network"`
-	Storage        string `gorm:"column:storage"`
+	ID                 string `gorm:"primaryKey;column:id"`
+	UserDataId         string `gorm:"column:UserDataId"`
+	Ssh_keysId         string `gorm:"column:ssh_keysId"`
+	Name               string `gorm:"column:name"`
+	NodeId             string `gorm:"column:nodeId"`
+	Image              string `gorm:"column:image"`
+	Tag                string `gorm:"column:tag"`
+	Network            string `gorm:"column:network"`
+	Storage            string `gorm:"column:storage"`
+	Container_nickname string `gorm:"column:container_nickname"`
 }
 
 func (Containers_scheduled) TableName() string {

@@ -15,9 +15,8 @@ class RabbitMQConnection {
   }
   async connect() {
     if (this.connected && this.channel) return
-
     this.connection = await amqplib.connect(
-      `amqp://${rmqUser}:${rmqPass}@${rmqhost}:5672/caas`
+      `amqp://${rmqUser}:${rmqPass}@${rmqhost}:5672/`
     )
     this.channel = await this.connection.createChannel()
     this.connected = true

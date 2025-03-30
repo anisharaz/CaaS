@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -87,7 +86,8 @@ func DockerActionsSubscriber(conn *amqp.Connection) {
 						log.Fatalf("Ack error: %v", ackError)
 					}
 				} else {
-					ackError := ackMessage.ack.Reject(true)
+					// TODO: change the Nack(false,false) to Nack(false,true) in production to requeue the message to another consumer
+					ackError := ackMessage.ack.Nack(false, false)
 					if ackError != nil {
 						log.Fatalf("Ack error: %v", ackError)
 					}
@@ -110,6 +110,7 @@ func DockerActionsSubscriber(conn *amqp.Connection) {
 func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 	var workData map[string]any
 	err := json.Unmarshal(work.Body, &workData)
+	fmt.Println("workData:", workData)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -131,34 +132,32 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 		db.Find(&dockerHostNode)
 		total_task_success := false
 		tx := db.Begin()
-		available_ssh_proxy_port := models.Available_ssh_proxy_ports{Used: false}
-		tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).First(&available_ssh_proxy_port)
-
+		available_ssh_proxy_port := models.Available_ssh_proxy_ports{}
+		tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).First(&available_ssh_proxy_port, "used = ?", false)
+		fmt.Println("available_ssh_proxy_port:", available_ssh_proxy_port)
 		state := &stateOfTasksIn_action_create{
 			create_authorized_keys: false,
 			create_container:       false,
 			create_ssh_tunnel:      false,
 		}
-		// one time loop, because we can prevent
-		// other task from proceeding if one of
-		// the task fails using break; statement
+		// one time loop, because we can prevent other task from proceeding using break if one of the task fails  statement
 		for range 1 {
 			// Pre-flight
 			sql, _ := db.DB()
 			if err := sql.Ping(); err != nil {
 				fmt.Println("Error:", err)
-				time.Sleep(time.Second * 2)
 				break
 			}
 
 			// TASK 1: create_authorized_keys
 			for range 2 {
-				okCreateAuthorizedKeys, _ := createAuthorizedKeys(&map[string]any{
+				okCreateAuthorizedKeys, err := createAuthorizedKeys(&map[string]any{
 					"userData_id":    container_schedule_data.UserDataId,
 					"ssh_public_key": ssh_keys.PublicKey,
-					"container_name": container_schedule_data.Container_name,
+					"container_name": container_schedule_data.Name,
 					"dockerHostName": dockerHostNode.Node_name,
 				})
+				fmt.Println("CreateAuthorizedKeysERROR:", err)
 				if okCreateAuthorizedKeys {
 					state.create_authorized_keys = true
 					break
@@ -169,16 +168,16 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 			}
 
 			// TASK 2: create_container
-			var containerIp string
 			for range 2 {
-				okCreateContainer, containerIp, _ := createContainer(&map[string]any{
-					"container_name": container_schedule_data.Container_name,
+				okCreateContainer, containerIp, err := createContainer(&map[string]any{
+					"container_name": container_schedule_data.Name,
 					"image":          container_schedule_data.Image,
 					"tag":            container_schedule_data.Tag,
 					"network":        container_schedule_data.Network,
 					"storage":        container_schedule_data.Storage,
 					"userData_id":    container_schedule_data.UserDataId,
 				})
+				fmt.Println("CreateContainerERROR:", err)
 				if okCreateContainer {
 					state.create_container = true
 					state.container_ip = containerIp
@@ -192,13 +191,14 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 
 			// TASK 3: create_ssh_tunnel
 			for range 2 {
-				okCreateSSHTunnel, tunnelPid, _ := createSSHTunnel(&map[string]any{
-					"ssh_proxy_port": available_ssh_proxy_port.Ssh_proxy_port,
-					"container_ip":   containerIp,
-					"node_name":      available_ssh_proxy_port.Ssh_proxy_node_name,
-					"ssh_tunnel_pid": 0,
-					"dockerHostName": state.container_ip,
+				okCreateSSHTunnel, tunnelPid, err := createSSHTunnel(&map[string]any{
+					"ssh_proxy_port":      available_ssh_proxy_port.Ssh_proxy_port,
+					"container_ip":        state.container_ip,
+					"ssh_proxy_node_name": available_ssh_proxy_port.Ssh_proxy_node_name,
+					"ssh_tunnel_pid":      0,
+					"dockerHostName":      dockerHostNode.Node_name,
 				})
+				fmt.Println("CreateSSHTunnelERROR:", err)
 				if okCreateSSHTunnel {
 					state.create_ssh_tunnel = true
 					state.ssh_tunnel_pid = tunnelPid
@@ -215,6 +215,7 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 			tx.Save(&available_ssh_proxy_port)
 
 			ssh_config := models.Ssh_config{
+				ID:                          uuid.NewString(),
 				Ssh_proxy_node_name:         available_ssh_proxy_port.Ssh_proxy_node_name,
 				Ssh_proxy_port:              uint32(available_ssh_proxy_port.Ssh_proxy_port),
 				Ssh_tunnel_process_id:       uint32(state.ssh_tunnel_pid),
@@ -224,7 +225,8 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 			tx.Create(&ssh_config)
 
 			container := models.Containers{
-				Name:             uuid.NewString(),
+				Name:             container_schedule_data.Name,
+				Nick_name:        container_schedule_data.Container_nickname,
 				NodeId:           container_schedule_data.NodeId,
 				Image:            container_schedule_data.Image,
 				Tag:              container_schedule_data.Tag,
@@ -237,6 +239,8 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 				Provision_status: "SUCCESS",
 			}
 			tx.Create(&container)
+
+			tx.Delete(&models.Containers_scheduled{ID: container_schedule_data.ID})
 
 			if tx.Commit().Error != nil {
 				// ! solution to this issue is needed
@@ -254,7 +258,7 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 
 			// if code can reach till here means all
 			// task completed, so we can directly set
-			// total_task_success to true
+			// total_task_success = true
 			total_task_success = true
 		}
 
@@ -285,6 +289,17 @@ func createAuthorizedKeys(data *map[string]any) (bool, error) {
 	if res.StatusCode != 200 {
 		return false, errors.New("failed")
 	}
+	body, _ := io.ReadAll(res.Body)
+	var bodyJson struct {
+		Return_code int8 `json:"return_code"`
+	}
+	err = json.Unmarshal(body, &bodyJson)
+	if err != nil {
+		return false, err
+	}
+	if bodyJson.Return_code != 0 {
+		return false, errors.New("failed")
+	}
 	return true, nil
 }
 
@@ -311,6 +326,9 @@ func createContainer(data *map[string]any) (bool, string, error) {
 	err = json.Unmarshal(body, &bodyJson)
 	if err != nil {
 		return false, "", err
+	}
+	if bodyJson.Return_code != 0 {
+		return false, "", errors.New("failed")
 	}
 	return true, bodyJson.Container_ip, nil
 }
@@ -339,6 +357,9 @@ func createSSHTunnel(data *map[string]any) (bool, int16, error) {
 	if err != nil {
 		return false, 0, err
 	}
+	if bodyJson.Return_code != 0 {
+		return false, 0, errors.New("failed")
+	}
 	return true, int16(bodyJson.Ssh_tunnel_pid), nil
 }
 
@@ -348,14 +369,13 @@ func compensate_CreateAuthorizedKeys() {
 }
 
 func compensate_CreateContainer() {
+	fmt.Println("compensate_CreateContainer")
 	// TODO: implement this function
 	compensate_CreateAuthorizedKeys()
-	fmt.Println("compensate_CreateContainer")
 }
 
 func compensate_CreateSSHTunnel() {
 	// TODO: implement this function
 	compensate_CreateContainer()
-	compensate_CreateAuthorizedKeys()
 	fmt.Println("compensate_CreateSSHTunnel")
 }

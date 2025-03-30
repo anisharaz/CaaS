@@ -1,20 +1,25 @@
 package database
 
 import (
+	"sync"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func ConnectDB() error {
-	// TODO: get the db details from env
-	dsn := "host=192.168.122.2 user=postgres password=postgresql dbname=gorm port=5432 sslmode=disable"
-	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	return err
-}
+var (
+	once sync.Once
+	DB   *gorm.DB
+)
 
 func GetDB() *gorm.DB {
+	once.Do(func() {
+		var err error
+		dsn := "host=192.168.122.2 user=postgres password=postgresql dbname=caas port=5432 sslmode=disable"
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			panic("failed to connect database")
+		}
+	})
 	return DB
 }

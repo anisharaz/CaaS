@@ -2,11 +2,15 @@
 import prisma from "@/lib/db"
 import axios from "axios"
 import { container_create_schema } from "@/lib/zod"
-import { ContainerActions, INFRA_BE_URL } from "@/lib/vars"
-import { v4 as uuid } from "uuid"
+import {
+  ContainerActions,
+  DEFAULT_CONTAINER_IMAGE,
+  INFRA_BE_URL
+} from "@/lib/vars"
 import { $Enums } from "@prisma/client"
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import { v4 } from "uuid"
+import { RMQClient } from "@/lib/rabbitmq"
 
 export async function startContainer({
   container_name
@@ -336,8 +340,6 @@ export async function createContainer({
       throw new Error("SSH Key not found")
     }
 
-    const ContainerName = uuid()
-
     const userData = await prisma.userData.findUnique({
       where: {
         id: user?.UserData?.id as string
@@ -366,95 +368,31 @@ export async function createContainer({
       throw new Error("Error, No available ssh proxy port")
     }
 
-    // Task 1: Create ssh key
-    const create_authorized_key = await axios.post(
-      INFRA_BE_URL + "/authorized_keys",
-      {
-        userData_id: user?.UserData?.id,
-        ssh_public_key: sshKey.public_key,
-        container_name: ContainerName,
-        dockerHostName: vpc.nodes.node_name
+    const res = await prisma.containers_scheduled.create({
+      data: {
+        container_nickname: container_name,
+        UserDataId: userData?.id as string,
+        ssh_keysId: sshKey.id,
+        name: v4(),
+        nodeId: vpc.nodeId,
+        image: DEFAULT_CONTAINER_IMAGE.split(":")[0],
+        tag: DEFAULT_CONTAINER_IMAGE.split(":")[1],
+        network: vpc.id,
+        storage: "3g"
       }
-    )
-    if (create_authorized_key.data.return_code !== 0) {
-      throw new Error("Error, Failed to create ssh key")
-    }
-
-    // Task 2: Create container
-    const createContainerResponse = await axios.post(
-      INFRA_BE_URL + "/container",
-      {
-        container_name: ContainerName,
-        image: "aaraz/caas",
-        tag: "1.2",
-        network: vpc?.id,
-        storage: "3G",
-        userData_id: user?.UserData?.id
-      }
-    )
-    if (createContainerResponse.data.return_code !== 0) {
-      throw new Error("Error, Failed to create container")
-    }
-
-    // Task 3: Create ssh tunnel
-    const sshTunnelResponse = await axios.post(INFRA_BE_URL + "/sshtunnel", {
-      ssh_proxy_port: available_ssh_proxy_port?.ssh_proxy_port,
-      container_ip: createContainerResponse.data.container_ip,
-      node_name: available_ssh_proxy_port?.ssh_proxy_node_name,
-      ssh_tunnel_pid: 0,
-      dockerHostName: vpc.nodes.node_name,
-      ssh_proxy_node_name: available_ssh_proxy_port.ssh_proxy_node_name
-    })
-    if (sshTunnelResponse.data.return_code !== 0) {
-      throw new Error("Error, Failed to create ssh tunnel")
-    }
-
-    const containerIP = createContainerResponse.data.container_ip
-
-    // Task 4: Update the database
-    await prisma.$transaction(async (tx) => {
-      await tx.available_ssh_proxy_ports.update({
-        where: {
-          id: available_ssh_proxy_port?.id as string
-        },
-        data: {
-          used: true
-        }
-      })
-
-      const ssh_config = await tx.ssh_config.create({
-        data: {
-          ssh_proxy_node_name: available_ssh_proxy_port.ssh_proxy_node_name,
-          ssh_proxy_port: available_ssh_proxy_port.ssh_proxy_port,
-          ssh_tunnel_process_id: sshTunnelResponse.data.ssh_tunnel_pid,
-          available_ssh_proxy_portsId: available_ssh_proxy_port.id,
-          UserDataId: user?.UserData?.id as string
-        }
-      })
-
-      await tx.containers.create({
-        data: {
-          name: ContainerName,
-          nick_name: container_name,
-          nodeId: vpc.nodes.id,
-          image: "aaraz/caas",
-          tag: "1.2",
-          state: $Enums.CONTAINER_STATE.STARTED,
-          vpcId: vpc?.id as string,
-          ip_address: containerIP,
-          UserDataId: user?.UserData?.id as string,
-          ssh_config_id: ssh_config.id,
-          ssh_keysId: sshKey.id
-        }
-      })
     })
 
-    // Revalidate cache used by Nextjs
-    revalidatePath("/console/containers")
+    await RMQClient.SendActionToRMQ({
+      message: {
+        action: "create",
+        container_schedule_id: res.id
+      },
+      action_type: "docker_actions"
+    })
 
     return {
       success: true,
-      message: "Container Created Successfully"
+      message: "Container scheduled Successfully"
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {

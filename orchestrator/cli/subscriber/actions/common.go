@@ -6,4 +6,4 @@ import (
 
 var HttpMainClient http.Client
 
-var InfraBeUrl string = "http://localhost:8080"
+var InfraBeUrl string = "http://localhost:8000"

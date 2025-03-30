@@ -30,6 +30,11 @@ export async function GET(request: NextRequest) {
         select: {
           ssh_proxy_port: true
         }
+      },
+      nodes: {
+        select: {
+          node_name: true
+        }
       }
     }
   })
@@ -39,7 +44,7 @@ export async function GET(request: NextRequest) {
         container_name: container.name,
         container_nick_name: container.nick_name,
         container_ip: container.ip_address,
-        node: container.node,
+        node: container.nodes.node_name,
         created_at: container.createdAt,
         ssh_port: container.ssh_config.ssh_proxy_port
       }
