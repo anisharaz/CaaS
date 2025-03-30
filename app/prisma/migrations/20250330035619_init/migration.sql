@@ -180,7 +180,7 @@ CREATE TABLE "public"."ssh_config" (
     "id" TEXT NOT NULL,
     "ssh_proxy_node_name" TEXT NOT NULL,
     "ssh_proxy_port" INTEGER NOT NULL,
-    "ssh_tunnel_process_id" INTEGER NOT NULL,
+    "ssh_tunnel_process_id" BIGINT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "UserDataId" TEXT NOT NULL,
@@ -239,9 +239,10 @@ CREATE TABLE "nodes"."node_resources" (
     "total_cpu" INTEGER NOT NULL,
     "total_memory" INTEGER NOT NULL,
     "total_disk" INTEGER NOT NULL,
-    "used_cpu" INTEGER NOT NULL,
-    "used_memory" INTEGER NOT NULL,
-    "used_disk" INTEGER NOT NULL,
+    "available_cpu" INTEGER NOT NULL,
+    "available_memory" INTEGER NOT NULL,
+    "available_disk" INTEGER NOT NULL,
+    "containers_running" INTEGER NOT NULL,
     "nodeId" TEXT NOT NULL,
 
     CONSTRAINT "node_resources_pkey" PRIMARY KEY ("id")
