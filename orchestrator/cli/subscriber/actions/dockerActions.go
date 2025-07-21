@@ -17,7 +17,7 @@ import (
 )
 
 type ackMessage struct {
-	ack     *amqp.Delivery
+	message *amqp.Delivery
 	success bool
 }
 
@@ -81,13 +81,13 @@ func DockerActionsSubscriber(conn *amqp.Connection) {
 				// The false in the Ack() function states that it should only acknowledge this single message
 				// If true it will ack all message if they are not processed
 				if ackMessage.success {
-					ackError := ackMessage.ack.Ack(false)
+					ackError := ackMessage.message.Ack(false)
 					if ackError != nil {
 						log.Fatalf("Ack error: %v", ackError)
 					}
 				} else {
 					// TODO: change the Nack(false,false) to Nack(false,true) in production to requeue the message to another consumer
-					ackError := ackMessage.ack.Nack(false, false)
+					ackError := ackMessage.message.Nack(false, false)
 					if ackError != nil {
 						log.Fatalf("Ack error: %v", ackError)
 					}
@@ -263,9 +263,9 @@ func dockerActionsWorker(acks chan<- *ackMessage, work *amqp.Delivery) {
 		}
 
 		if total_task_success {
-			acks <- &ackMessage{ack: work, success: true}
+			acks <- &ackMessage{message: work, success: true}
 		} else {
-			acks <- &ackMessage{ack: work, success: false}
+			acks <- &ackMessage{message: work, success: false}
 		}
 
 	case "delete":
