@@ -9,13 +9,14 @@ const TerminalComponent = dynamic(() => import("./terminal"), {
 async function Terminal({
   params
 }: {
-  params: {
+  params: Promise<{
     container_id: string
-  }
+  }>
 }) {
+  const { container_id } = await params
   const container = await prisma.containers.findUnique({
     where: {
-      name: params.container_id
+      name: container_id
     },
     include: {
       vpc: true

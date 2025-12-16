@@ -86,7 +86,7 @@ function ContainerTable({
             setVpc(e)
           }}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue placeholder="Select a Vpc" />
           </SelectTrigger>
           <SelectContent>
@@ -109,7 +109,7 @@ function ContainerTable({
           />
         )}
       </div>
-      <div className="max-h-[600px] overflow-auto max-w-[90vw]">
+      <div className="max-h-150 overflow-auto max-w-[90vw]">
         <Table>
           <TableHeader className="dark:bg-zinc-800 bg-muted">
             <TableRow>

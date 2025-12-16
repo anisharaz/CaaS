@@ -8,13 +8,14 @@ import { ContainerMetricsContextProvider } from "@/context/ContainerMetricsConte
 async function ContainerDetail({
   params
 }: {
-  params: {
+  params: Promise<{
     container_id: string
-  }
+  }>
 }) {
+  const { container_id } = await params
   const container = await prisma.containers.findUnique({
     where: {
-      name: params.container_id
+      name: container_id
     },
     include: {
       inbound_rules: {
@@ -40,7 +41,7 @@ async function ContainerDetail({
     }
   })
   return (
-    <ContainerMetricsContextProvider container_id={params.container_id}>
+    <ContainerMetricsContextProvider container_id={container_id}>
       <div
         style={{
           height: "calc(100vh - 65px)",
@@ -68,7 +69,7 @@ async function ContainerDetail({
         </div>
         <div>
           <ContainerDetailTabs
-            container_name={params.container_id}
+            container_name={container_id}
             createdAt={container?.createdAt as Date}
             nick_name={container?.nick_name as string}
             ip_address={container?.ip_address as string}
