@@ -1,23 +1,14 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
   schemas  = ["public", "nodes"]
+  provider = "postgresql"
 }
 
-// ** SCHEMA : public START /////////////////////////////////////////////////////////////////////////
 model User {
-  // For AUTH
   id            String          @id @default(cuid())
   name          String
   email         String          @unique
@@ -126,7 +117,6 @@ model Authenticator {
   @@schema("public")
 }
 
-// ** MODELS FOR APP START ////////////////////////////////////////////////////////////////////////////
 model vpc {
   id              String        @id
   vpc_name        String
@@ -294,11 +284,6 @@ model resources_limit {
   @@schema("public")
 }
 
-// ** MODELS FOR APP END ////////////////////////////////////////////////////////////////////////////
-
-// ** SCHEMA : public END //////////////////////////////////////////////////////////////////////////////
-
-// ** SCHEMA : nodes START /////////////////////////////////////////////////////////////////////////////
 enum NODE_TYPE {
   FREE
   PREMIUM
@@ -337,13 +322,3 @@ model node_resources {
 
   @@schema("nodes")
 }
-
-// ** SCHEMA : nodes END //////////////////////////////////////////////////////////////////////////////
-
-// model cloudflare_zones {
-//   id        String @id @default(cuid())
-//   zone_name String
-//   zone_id   String
-
-//   @@schema("nodes")
-// }
