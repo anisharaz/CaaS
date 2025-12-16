@@ -13,7 +13,6 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import SideBarLinks from "../SideBarLinks"
-import { LogoutButton } from "../LoginLogoutButton"
 
 function NavBar() {
   const { setTheme, theme } = useTheme()
@@ -85,7 +84,7 @@ function NavBar() {
               </DropdownMenu>
               <div className="flex justify-between">
                 <div className="text-[28px] font-bold">Menu</div>
-                <LogoutButton />
+                {/* <LogoutButton /> */}
               </div>
               <Link
                 href={"/documentation"}

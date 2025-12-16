@@ -1,12 +1,15 @@
 "use server"
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth"
 import prisma from "@/lib/db"
 import { DEFAULT_VPC_NAME, INFRA_BE_URL } from "@/lib/vars"
 import axios from "axios"
+import { headers } from "next/headers"
 import { v4 as uuid } from "uuid"
 
 export async function initializeUser({ username }: { username: string }) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
   const vpcID = uuid()
   try {
     const user = await prisma.user.findUnique({

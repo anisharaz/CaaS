@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
-    "build": "next build --turbo",
+    "dev": "bun --bun next dev --turbo",
+    "build": "bun --bun next build --turbo",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier ./app --write"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "7.1.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -30,6 +31,7 @@
     "@xterm/xterm": "^5.5.0",
     "amqplib": "^0.10.9",
     "axios": "^1.13.2",
+    "better-auth": "^1.4.7",
     "class-variance-authority": "^0.7.1",
     "cloudflare": "^5.2.0",
     "clsx": "^2.1.1",
