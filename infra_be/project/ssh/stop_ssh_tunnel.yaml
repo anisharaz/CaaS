@@ -1,6 +1,0 @@
-- name: Stop ssh tunnel
-  hosts: "{{ ssh_proxy_node_name }}"
-  gather_facts: false
-  tasks:
-    - name: Stop ssh tunnel
-      ansible.builtin.shell: kill -9 {{ ssh_tunnel_pid }}
