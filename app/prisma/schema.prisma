@@ -84,98 +84,74 @@ enum USER_STATE {
 }
 
 model UserData {
-  id                   String                 @id @default(cuid())
-  user                 User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId               String                 @unique
-  username             String?
-  user_state           USER_STATE             @default(NEW)
-  vpc                  vpc[]
-  inbound_rules        inbound_rules[]
-  containers           containers[]
-  ssh_config           ssh_config[]
-  ssh_keys             ssh_keys[]
-  resources_limit      resources_limit        @relation(fields: [resources_limitId], references: [id], onDelete: Cascade)
-  resources_limitId    String                 @unique
-  user_type            USER_TYPE              @default(FREE)
-  containers_scheduled containers_scheduled[]
+  id                  String                @id @default(cuid())
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String                @unique
+  username            String?
+  userState           USER_STATE            @default(NEW)
+  Vpc                 Vpc[]
+  InboundRules        InboundRules[]
+  containers          containers[]
+  SshKeys             SshKeys[]
+  user_type           USER_TYPE             @default(FREE)
+  ScheduledContainers ScheduledContainers[]
 }
 
-model vpc {
-  id              String        @id
-  vpc_name        String
-  nodes           nodes         @relation(fields: [nodeId], references: [id])
-  nodeId          String
-  network         String
-  cidr            String
-  gateway         String
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  containers      containers[]
-  UserData        UserData      @relation(fields: [UserDataId], references: [id])
-  UserDataId      String
-  available_vpc   available_vpc @relation(fields: [available_vpcId], references: [id], onDelete: Cascade)
-  available_vpcId String        @unique
+model Vpc {
+  id         String       @id
+  vpcName    String
+  cidr       String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  containers containers[]
+  UserData   UserData     @relation(fields: [UserDataId], references: [id])
+  UserDataId String
 }
 
 enum CONTAINER_STATE {
-  STARTED
+  RUNNING
   STOPPED
 }
 
-enum provision_status {
+enum ScheduledContainersStatus {
   PENDING
   SUCCESS
 }
 
-// containers_scheduled model holds the container details which are 
-// scheduled for provisioning by the orchestrator once the container
-// is provisioned, item will be removed from this table and entry is 
-// made in the containers table
-
-model containers_scheduled {
-  id                 String   @id @default(cuid())
-  UserData           UserData @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
-  UserDataId         String
-  ssh_keys           ssh_keys @relation(fields: [ssh_keysId], references: [id])
-  ssh_keysId         String
-  name               String
-  nodes              nodes    @relation(fields: [nodeId], references: [id])
-  nodeId             String
-  image              String
-  tag                String
-  network            String
-  storage            String
-  container_nickname String
+model ScheduledContainers {
+  id         String                    @id @default(cuid())
+  UserData   UserData                  @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+  UserDataId String
+  SshKeys    SshKeys                   @relation(fields: [SshKeysId], references: [id])
+  SshKeysId  String
+  name       String
+  image      String
+  vpc        String
+  storage    String
+  status     ScheduledContainersStatus @default(PENDING)
 }
 
 model containers {
-  name             String           @id
-  nick_name        String?
-  nodes            nodes            @relation(fields: [nodeId], references: [id])
-  nodeId           String
-  image            String
-  tag              String
-  state            CONTAINER_STATE
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  vpc              vpc              @relation(fields: [vpcId], references: [id], onDelete: Cascade)
-  vpcId            String
-  ip_address       String
-  inbound_rules    inbound_rules[]
-  UserData         UserData         @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
-  UserDataId       String
-  ssh_config       ssh_config       @relation(fields: [ssh_config_id], references: [id], onDelete: Cascade)
-  ssh_config_id    String           @unique
-  ssh_keys         ssh_keys         @relation(fields: [ssh_keysId], references: [id])
-  ssh_keysId       String
-  provision_status provision_status @default(PENDING)
+  id           String                 @id
+  name         String
+  image        String
+  state        CONTAINER_STATE
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  Vpc          Vpc                    @relation(fields: [vpcId], references: [id], onDelete: Cascade)
+  vpcId        String
+  ipAddress    String
+  InboundRules InboundRules[]
+  UserData     UserData               @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+  UserDataId   String
+  SshKeys      SshKeys                @relation(fields: [SshKeysId], references: [id])
+  SshKeysId    String
+  SshPort      SshProxyAvailablePorts @relation(fields: [SshPortId], references: [id])
+  SshPortId    String                 @unique
 }
 
-model inbound_rules {
+model InboundRules {
   id                   String     @id @default(cuid())
-  nodes                nodes      @relation(fields: [nodeId], references: [id])
-  nodeId               String
-  rule_name            String // it is config_name in nginx infra. backend
   domain_name          String     @unique
   service_protocol     String
   container_ip         String
@@ -184,100 +160,27 @@ model inbound_rules {
   updatedAt            DateTime   @updatedAt
   UserData             UserData   @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
   UserDataId           String
-  containers           containers @relation(fields: [containersName], references: [name], onDelete: Cascade)
+  containers           containers @relation(fields: [containersName], references: [id], onDelete: Cascade)
   containersName       String
   cloudflare_zone      String
   cloudflare_record_id String
 }
 
-model available_vpc {
-  id      String  @id @default(cuid())
-  cidr    String
-  network String
-  gateway String
-  used    Boolean
-  vpc     vpc?
-  nodes   nodes   @relation(fields: [nodeId], references: [id])
-  nodeId  String
+model SshProxyAvailablePorts {
+  id           String      @id @default(cuid())
+  sshProxyPort Int
+  used         Boolean
+  containers   containers?
 }
 
-model ssh_config {
-  id                          String                    @id @default(cuid())
-  ssh_proxy_node_name         String
-  ssh_proxy_port              Int
-  ssh_tunnel_process_id       BigInt
-  createdAt                   DateTime                  @default(now())
-  updatedAt                   DateTime                  @updatedAt
-  UserData                    UserData                  @relation(fields: [UserDataId], references: [id])
-  UserDataId                  String
-  containers                  containers?
-  available_ssh_proxy_ports   available_ssh_proxy_ports @relation(fields: [available_ssh_proxy_portsId], references: [id], onDelete: Cascade)
-  available_ssh_proxy_portsId String                    @unique
-}
-
-// TODO: add schema to for multiple ssh_proxy_nodes, similar to docker host nodes schema
-
-model available_ssh_proxy_ports {
-  id                  String      @id @default(cuid())
-  ssh_proxy_node_name String
-  ssh_proxy_port      Int
-  used                Boolean
-  ssh_config          ssh_config?
-}
-
-model ssh_keys {
-  id                   String                 @id @default(cuid())
-  nick_name            String
-  public_key           String
-  private_key          String
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  UserData             UserData               @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
-  UserDataId           String
-  containers           containers[]
-  containers_scheduled containers_scheduled[]
-}
-
-model resources_limit {
-  id                 String    @id @default(cuid())
-  vpc_limit          Int       @default(2)
-  container_limit    Int       @default(2)
-  ssh_key_limit      Int       @default(2)
-  inbound_rule_limit Int       @default(5)
-  UserData           UserData?
-}
-
-enum NODE_TYPE {
-  FREE
-  PREMIUM
-}
-
-// nodes are the docker host nodes
-
-model nodes {
-  id                   String                 @id @default(cuid())
-  node_name            String                 @unique
-  node_ip              String                 @unique
-  node_type            NODE_TYPE
-  available_vpc        available_vpc[]
-  inbound_rules        inbound_rules[]
-  node_resources       node_resources?
-  containers           containers[]
-  vpc                  vpc[]
-  containers_scheduled containers_scheduled[]
-}
-
-// based on this schema a premium container will be scheduled
-
-model node_resources {
-  id                 String @id @default(cuid())
-  total_cpu          Int
-  total_memory       Int
-  total_disk         Int
-  available_cpu      Int
-  available_memory   Int
-  available_disk     Int
-  containers_running Int
-  nodes              nodes  @relation(fields: [nodeId], references: [id], onDelete: Cascade)
-  nodeId             String @unique
+model SshKeys {
+  id                  String                @id @default(cuid())
+  name                String
+  publicKey           String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  UserData            UserData              @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+  UserDataId          String
+  containers          containers[]
+  scheduledContainers ScheduledContainers[]
 }
