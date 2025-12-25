@@ -21,6 +21,16 @@ model UserData {
     SshKeys             SshKeys[]
     user_type           USER_TYPE             @default(FREE)
     ScheduledContainers ScheduledContainers[]
+    incusProjects       IncusProject[]
+}
+
+model IncusProject {
+    id         String   @id
+    name       String?
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    UserData   UserData @relation(fields: [UserDataId], references: [id])
+    UserDataId String
 }
 
 model Vpc {
@@ -45,7 +55,7 @@ enum ScheduledContainersStatus {
 }
 
 model ScheduledContainers {
-    id         String                    @id @default(cuid())
+    id         String                    @id
     UserData   UserData                  @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
     UserDataId String
     SshKeys    SshKeys                   @relation(fields: [SshKeysId], references: [id])
@@ -77,7 +87,7 @@ model containers {
 }
 
 model InboundRules {
-    id                   String     @id @default(cuid())
+    id                   String     @id
     domain_name          String     @unique
     service_protocol     String
     container_ip         String
@@ -93,14 +103,14 @@ model InboundRules {
 }
 
 model SshProxyAvailablePorts {
-    id           String      @id @default(cuid())
+    id           String      @id
     sshProxyPort Int
     used         Boolean
     containers   containers?
 }
 
 model SshKeys {
-    id                  String                @id @default(cuid())
+    id                  String                @id
     name                String
     publicKey           String
     createdAt           DateTime              @default(now())
