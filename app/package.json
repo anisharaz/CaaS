@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "7.1.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -31,24 +31,24 @@
     "@xterm/xterm": "^5.5.0",
     "amqplib": "^0.10.9",
     "axios": "^1.13.2",
-    "better-auth": "^1.4.7",
+    "better-auth": "^1.4.10",
     "class-variance-authority": "^0.7.1",
     "cloudflare": "^5.2.0",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.23.26",
+    "framer-motion": "^12.24.12",
     "lucide-react": "^0.561.0",
     "nanoid": "^5.1.6",
     "next": "16.0.10",
     "next-themes": "^0.4.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-hook-form": "^7.68.0",
+    "react-hook-form": "^7.70.0",
     "recharts": "2.15.4",
     "sonner": "^2.0.7",
     "sshpk": "^1.18.0",
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0",
-    "zod": "^4.2.1"
+    "zod": "^4.3.5"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed/seed.ts"

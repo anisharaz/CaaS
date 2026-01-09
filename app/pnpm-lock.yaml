@@ -12,7 +12,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.70.0(react@19.2.3))
       '@prisma/adapter-pg':
-        specifier: ^7.1.0
+        specifier: ^7.2.0
         version: 7.2.0
       '@prisma/client':
         specifier: 7.1.0
@@ -72,7 +72,7 @@ importers:
         specifier: ^1.13.2
         version: 1.13.2
       better-auth:
-        specifier: ^1.4.7
+        specifier: ^1.4.10
         version: 1.4.10(@prisma/client@7.1.0(prisma@7.1.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3))(mysql2@3.15.3)(next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(pg@8.16.3)(prisma@7.1.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       class-variance-authority:
         specifier: ^0.7.1
@@ -84,7 +84,7 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       framer-motion:
-        specifier: ^12.23.26
+        specifier: ^12.24.12
         version: 12.24.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       lucide-react:
         specifier: ^0.561.0
@@ -105,7 +105,7 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(react@19.2.3)
       react-hook-form:
-        specifier: ^7.68.0
+        specifier: ^7.70.0
         version: 7.70.0(react@19.2.3)
       recharts:
         specifier: 2.15.4
@@ -123,7 +123,7 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0
       zod:
-        specifier: ^4.2.1
+        specifier: ^4.3.5
         version: 4.3.5
     devDependencies:
       '@types/react':
