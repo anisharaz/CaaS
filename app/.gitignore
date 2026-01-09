@@ -35,4 +35,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/lib/generated/prisma
+prisma/lib/generated
+
+# TODO: remove it later
+prisma/migrations
+
+client.crt
+client.key

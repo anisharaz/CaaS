@@ -2,7 +2,7 @@ import { AnimatedText } from "@/components/AnimatedText"
 import UsernameInput from "./username_form"
 import prisma from "@/lib/db"
 import { permanentRedirect } from "next/navigation"
-import { USER_STATE } from "@/lib/generated/prisma/enums"
+import { USER_STATE } from "@/prisma/lib/generated/prisma/enums"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 
@@ -10,6 +10,10 @@ async function WelcomePage() {
   const session = await auth.api.getSession({
     headers: await headers()
   })
+  if (!session) {
+    permanentRedirect("/auth/login")
+  }
+
   const user = await prisma.user.findUnique({
     where: {
       email: session?.user?.email as string
@@ -20,8 +24,8 @@ async function WelcomePage() {
   })
 
   if (
-    user?.userData?.user_state === USER_STATE.ACTIVE ||
-    user?.userData?.user_state === USER_STATE.SETTING_UP
+    user?.userData?.userState === USER_STATE.ACTIVE ||
+    user?.userData?.userState === USER_STATE.SETTING_UP
   ) {
     permanentRedirect("/console")
   }

@@ -36,7 +36,6 @@ model IncusProject {
 model Vpc {
     id         String       @id
     vpcName    String
-    cidr       String
     createdAt  DateTime     @default(now())
     updatedAt  DateTime     @updatedAt
     containers containers[]

@@ -1,20 +1,27 @@
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth"
 import { ConsoleOptions, ConsoleContainers } from "./ConsoleHomeComponents"
 import prisma from "@/lib/db"
+import { headers } from "next/headers"
+import { permanentRedirect } from "next/navigation"
 
 async function ConsolePage() {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
+  if (!session) {
+    permanentRedirect("/auth/login")
+  }
   const user = await prisma.user.findUnique({
     where: {
       email: session?.user?.email as string
     },
     include: {
-      UserData: {
+      userData: {
         select: {
-          vpc: {
+          Vpc: {
             select: {
               id: true,
-              vpc_name: true
+              vpcName: true
             }
           }
         }
@@ -30,7 +37,7 @@ async function ConsolePage() {
         </div>
         <div className="md:grid grid-cols-2 gap-4">
           <ConsoleOptions />
-          <ConsoleContainers vpcs={user?.UserData?.vpc} />
+          <ConsoleContainers vpcs={user?.userData?.Vpc} />
         </div>
       </div>
     </>

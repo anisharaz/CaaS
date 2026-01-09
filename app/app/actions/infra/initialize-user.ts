@@ -1,16 +1,24 @@
 "use server"
 import { auth } from "@/lib/auth"
+import {
+  createNetwork,
+  createProject,
+  setDefaultProfileNetworkAndVolume
+} from "@/lib/axios"
 import prisma from "@/lib/db"
 import { headers } from "next/headers"
-import { v4 as uuid } from "uuid"
-
+import { nanoid } from "nanoid"
 export async function initializeUser({ username }: { username: string }) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
 
   // create network
-  // create project with network
+  const vpcID = nanoid()
+  const incusProjectId = nanoid()
+  await createNetwork(vpcID)
+  await createProject(incusProjectId)
+  await setDefaultProfileNetworkAndVolume(incusProjectId, vpcID)
 
   try {
     const user = await prisma.user.findUnique({
@@ -19,20 +27,19 @@ export async function initializeUser({ username }: { username: string }) {
       }
     })
 
-    const userDataID = uuid()
-
     await prisma.$transaction(async (tx) => {
-      const resource_limit = await tx.resources_limit.create({
-        data: {}
-      })
-
-      await tx.userData.create({
+      const ud = await tx.userData.create({
         data: {
-          id: userDataID,
           userId: user?.id as string,
-          resources_limitId: resource_limit.id,
           username: username,
-          user_state: "ACTIVE"
+          userState: "ACTIVE"
+        }
+      })
+      await tx.vpc.create({
+        data: {
+          id: vpcID,
+          vpcName: "default",
+          UserDataId: ud.id
         }
       })
     })

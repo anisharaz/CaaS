@@ -10,6 +10,6 @@ export {
   deleteInboundRule,
   editInboundRule
 } from "./inbound_rules"
-export { initializeUser } from "./initialize_user"
+export { initializeUser } from "./initialize-user"
 
 // TODO: check authentication before running any of these functions

@@ -92,24 +92,24 @@ export function ConsoleContainers({
 }: {
   vpcs:
     | {
-        vpc_name: string
+        vpcName: string
         id: string
       }[]
     | undefined
 }) {
   const [vpc, setVpc] = useState(() => {
-    return vpcs?.filter((vpc) => vpc.vpc_name === DEFAULT_VPC_NAME)[0]?.id
+    return vpcs?.filter((vpc) => vpc.vpcName === DEFAULT_VPC_NAME)[0]?.id
   })
   const [vpcFetchLoading, setVpcFetchLoading] = useState(false)
   const [container, setContainer] = useState<
     {
+      container_id: string
       container_name: string
-      container_nick_name: string
       container_ip: string
     }[]
   >([])
   const DefaultVPCID = vpcs?.filter(
-    (vpc) => vpc.vpc_name === DEFAULT_VPC_NAME
+    (vpc) => vpc.vpcName === DEFAULT_VPC_NAME
   )[0]?.id
   useEffect(() => {
     async function getContainers() {
@@ -137,14 +137,14 @@ export function ConsoleContainers({
               setVpc(e)
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-45">
               <SelectValue placeholder="Select a Vpc" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 {vpcs?.map((vpc) => (
                   <SelectItem key={vpc.id} value={vpc.id}>
-                    {vpc.vpc_name}
+                    {vpc.vpcName}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -153,20 +153,20 @@ export function ConsoleContainers({
           {vpcFetchLoading && <Loader2 className="w-6 h-6 animate-spin" />}
         </div>
       </div>
-      <div className="md:h-[600px] max-h-[300px] md:max-h-[600px] overflow-auto">
+      <div className="md:h-150 max-h-75 md:max-h-150 overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Name</TableHead>
+              <TableHead className="w-50">Name</TableHead>
               <TableHead className="">Container IP</TableHead>
               <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {container.map((container) => (
-              <TableRow key={container.container_name}>
+              <TableRow key={container.container_id}>
                 <TableCell className="font-medium">
-                  {container.container_nick_name}
+                  {container.container_name}
                 </TableCell>
                 <TableCell className="">{container.container_ip}</TableCell>
                 <TableCell className="flex justify-end text-right">
