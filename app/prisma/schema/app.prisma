@@ -10,18 +10,17 @@ enum USER_STATE {
 }
 
 model UserData {
-    id                  String                @id @default(cuid())
-    user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId              String                @unique
-    username            String?
-    userState           USER_STATE            @default(NEW)
-    Vpc                 Vpc[]
-    InboundRules        InboundRules[]
-    containers          containers[]
-    SshKeys             SshKeys[]
-    user_type           USER_TYPE             @default(FREE)
-    ScheduledContainers ScheduledContainers[]
-    incusProjects       IncusProject[]
+    id            String         @id @default(cuid())
+    user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId        String         @unique
+    username      String?
+    userState     USER_STATE     @default(NEW)
+    Vpc           Vpc[]
+    InboundRules  InboundRules[]
+    containers    containers[]
+    SshKeys       SshKeys[]
+    user_type     USER_TYPE      @default(FREE)
+    incusProjects IncusProject[]
 }
 
 model IncusProject {
@@ -46,24 +45,7 @@ model Vpc {
 enum CONTAINER_STATE {
     RUNNING
     STOPPED
-}
-
-enum ScheduledContainersStatus {
     PENDING
-    SUCCESS
-}
-
-model ScheduledContainers {
-    id         String                    @id
-    UserData   UserData                  @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
-    UserDataId String
-    SshKeys    SshKeys                   @relation(fields: [SshKeysId], references: [id])
-    SshKeysId  String
-    name       String
-    image      String
-    vpc        String
-    storage    String
-    status     ScheduledContainersStatus @default(PENDING)
 }
 
 model containers {
@@ -75,7 +57,7 @@ model containers {
     updatedAt    DateTime               @updatedAt
     Vpc          Vpc                    @relation(fields: [vpcId], references: [id], onDelete: Cascade)
     vpcId        String
-    ipAddress    String
+    ipAddress    String?
     InboundRules InboundRules[]
     UserData     UserData               @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
     UserDataId   String
@@ -109,13 +91,12 @@ model SshProxyAvailablePorts {
 }
 
 model SshKeys {
-    id                  String                @id
-    name                String
-    publicKey           String
-    createdAt           DateTime              @default(now())
-    updatedAt           DateTime              @updatedAt
-    UserData            UserData              @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
-    UserDataId          String
-    containers          containers[]
-    scheduledContainers ScheduledContainers[]
+    id         String       @id
+    name       String
+    publicKey  String
+    createdAt  DateTime     @default(now())
+    updatedAt  DateTime     @updatedAt
+    UserData   UserData     @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+    UserDataId String
+    containers containers[]
 }

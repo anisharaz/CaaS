@@ -1,4 +1,4 @@
-export const DEFAULT_VPC_NAME = "Default"
+export const DEFAULT_VPC_NAME = "default"
 
 export enum ContainerActions {
   START = "start",

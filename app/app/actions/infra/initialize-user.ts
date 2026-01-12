@@ -6,18 +6,19 @@ import {
   setDefaultProfileNetworkAndVolume
 } from "@/lib/axios"
 import prisma from "@/lib/db"
-import { headers } from "next/headers"
 import { nanoid } from "nanoid"
+import { headers } from "next/headers"
+
 export async function initializeUser({ username }: { username: string }) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
 
   // create network
-  const vpcID = nanoid()
-  const incusProjectId = nanoid()
-  await createNetwork(vpcID)
+  const vpcID = nanoid(15)
+  const incusProjectId = nanoid(15)
   await createProject(incusProjectId)
+  await createNetwork(vpcID)
   await setDefaultProfileNetworkAndVolume(incusProjectId, vpcID)
 
   try {

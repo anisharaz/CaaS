@@ -33,11 +33,11 @@ export function ConsoleOptions() {
       <div className="p-4 text-md md:text-xl space-y-4">
         <Link href={"/console/account"} className="flex gap-4 items-center">
           <Image
-            src={"https://static.aaraz.me/caas/profile_logo.png"}
+            src={"/account.jpeg"}
             alt=""
             height={100}
             width={100}
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-2xl"
           />
           <div className="text-blue-700 hover:text-blue-900 hover:underline underline-offset-2 cursor-pointer">
             Account
@@ -46,11 +46,11 @@ export function ConsoleOptions() {
         <Separator />
         <Link href={"/console/containers"} className="flex gap-4 items-center">
           <Image
-            src={"https://static.aaraz.me/caas/container_logo.svg"}
+            src={"/container.png"}
             alt=""
             height={100}
             width={100}
-            className="h-7 w-7"
+            className="h-7 w-7 rounded-2xl"
           />
           <div className="text-blue-700 hover:text-blue-900 hover:underline underline-offset-2 cursor-pointer">
             My Containers
@@ -59,11 +59,11 @@ export function ConsoleOptions() {
         <Separator />
         <Link href={"/console/vpc"} className="flex gap-4 items-center">
           <Image
-            src={"https://static.aaraz.me/caas/vpc_logo.svg"}
+            src={"/vpc.svg"}
             alt=""
             height={100}
             width={100}
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-2xl"
           />
           <div className="text-blue-700 hover:text-blue-900 hover:underline underline-offset-2 cursor-pointer">
             My VPCs
@@ -106,6 +106,7 @@ export function ConsoleContainers({
       container_id: string
       container_name: string
       container_ip: string
+      status: string
     }[]
   >([])
   const DefaultVPCID = vpcs?.filter(
@@ -168,11 +169,11 @@ export function ConsoleContainers({
                 <TableCell className="font-medium">
                   {container.container_name}
                 </TableCell>
-                <TableCell className="">{container.container_ip}</TableCell>
+                <TableCell className="">
+                  {container.container_ip || 0}
+                </TableCell>
                 <TableCell className="flex justify-end text-right">
-                  <ContainerStatusBadge
-                    container_name={container.container_name}
-                  />
+                  <ContainerStatusBadge container_name={container.status} />
                 </TableCell>
               </TableRow>
             ))}
