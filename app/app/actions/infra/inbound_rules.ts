@@ -1,24 +1,26 @@
 "use server"
 import prisma from "@/lib/db"
-import axios from "axios"
 import { inbound_rules_schema } from "@/lib/zod"
-import { INFRA_BE_URL } from "@/lib/vars"
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth"
 import { CfClient } from "@/lib/cloudflare"
+import { headers } from "next/headers"
+import { nanoid } from "nanoid"
 
 export async function createInboundRule({
   domain_name,
   container_port,
   config_name,
-  container_name
+  container_id
 }: {
   domain_name: string
   container_port: number
   config_name: string
-  container_name: string
+  container_id: string
 }) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    header: await headers()
+  })
   try {
     const validation = inbound_rules_schema.safeParse({
       config_name: config_name,
@@ -35,16 +37,13 @@ export async function createInboundRule({
         email: session?.user?.email as string
       },
       include: {
-        UserData: true
+        userData: true
       }
     })
 
     const container = await prisma.containers.findUnique({
       where: {
-        name: container_name
-      },
-      include: {
-        nodes: true
+        id: container_id
       }
     })
 
@@ -52,7 +51,7 @@ export async function createInboundRule({
       throw new Error("Container not found")
     }
 
-    const doesDomainAlreadyExists = await prisma.inbound_rules.findUnique({
+    const doesDomainAlreadyExists = await prisma.inboundRules.findUnique({
       where: {
         domain_name: domain_name
       }
@@ -73,7 +72,8 @@ export async function createInboundRule({
         name: domain_name,
         content: process.env.ORACLE_NODE_IP as string,
         proxied: true,
-        comment: user?.id as string
+        comment: user?.id as string,
+        ttl: 300
       })
 
       if (!create_dns) {
@@ -82,38 +82,22 @@ export async function createInboundRule({
     }
 
     // Task 2: Create Inbound rule in database
-    const res = await prisma.inbound_rules.create({
+    const res = await prisma.inboundRules.create({
       data: {
-        nodeId: container.nodes.id,
-        rule_name: config_name,
+        id: nanoid(),
         domain_name: domain_name,
         service_protocol: "http",
-        container_ip: container?.ip_address as string,
+        container_ip: container?.ipAddress as string,
         port: container_port,
-        UserDataId: user?.UserData?.id as string,
-        containersName: container?.name as string,
+        UserDataId: user?.userData?.id as string,
+        containersId: container?.id as string,
         cloudflare_record_id: create_dns.id as string,
         cloudflare_zone: process.env.CLOUDFLARE_ZONE_ID as string
       }
     })
 
     // Task 3: Create Inbound rule on the node
-    const createInboundRulesResponse = await axios.post(
-      INFRA_BE_URL + "/nginx",
-      {
-        config_id: res.id,
-        domain_name: domain_name,
-        // maybe changed
-        protocol: "http",
-        ip: container?.ip_address,
-        port: container_port,
-        container_name: container?.name,
-        dockerHostName: container.nodes.node_name
-      }
-    )
-    if (createInboundRulesResponse.data.return_code !== 0) {
-      throw new Error("failed to create inbound rule on the node")
-    }
+    // use caddy api
 
     // Revalidate cache made by nextjs
     revalidatePath("/console/containers/[container_id]")
@@ -144,7 +128,9 @@ export async function editInboundRule({
   container_port: number
   inbound_rule_id: string
 }) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    header: await headers()
+  })
   try {
     const validation = inbound_rules_schema.safeParse({
       config_name,
@@ -160,14 +146,14 @@ export async function editInboundRule({
         email: session?.user?.email as string
       },
       include: {
-        UserData: true
+        userData: true
       }
     })
 
-    const inbound_rule = await prisma.inbound_rules.findUnique({
+    const inbound_rule = await prisma.inboundRules.findUnique({
       where: {
         id: inbound_rule_id,
-        UserDataId: user?.UserData?.id as string
+        UserDataId: user?.userData?.id as string
       }
     })
 
@@ -175,34 +161,8 @@ export async function editInboundRule({
       throw new Error("Inbound rule not found")
     }
 
-    // No need to check of container exist because
-    // if inbound_rule exist then it must be associated to any container.
-    const container = await prisma.containers.findUnique({
-      where: {
-        name: inbound_rule?.containersName
-      },
-      include: {
-        nodes: true
-      }
-    })
-
     // Task 1: Edit inbound rule on node
-    const editInboundRulesResponse = await axios.post(
-      INFRA_BE_URL + "/edit_nginx",
-      {
-        config_id: inbound_rule.id,
-        domain_name: domain_name,
-        // maybe changed
-        protocol: "http",
-        ip: container?.ip_address,
-        port: container_port,
-        container_name: container?.name,
-        dockerHostName: container?.nodes.node_name
-      }
-    )
-    if (editInboundRulesResponse.data.return_code !== 0) {
-      throw new Error("failed to edit inbound rule on the node")
-    }
+    // use caddy api
 
     // Task 2: Update DNS record
     const update_dns_record = await CfClient.dns.records.update(
@@ -213,18 +173,18 @@ export async function editInboundRule({
         name: domain_name,
         content: process.env.ORACLE_NODE_IP as string,
         proxied: true,
-        comment: user?.UserData?.id as string
+        comment: user?.userData?.id as string,
+        ttl: 300
       }
     )
 
     // Task 3: Update inbound rule in database
-    await prisma.inbound_rules.update({
+    await prisma.inboundRules.update({
       where: {
         id: inbound_rule_id,
-        UserDataId: user?.UserData?.id as string
+        UserDataId: user?.userData?.id as string
       },
       data: {
-        rule_name: config_name,
         domain_name,
         port: container_port,
         cloudflare_record_id: update_dns_record.id
@@ -251,23 +211,22 @@ export async function deleteInboundRule({
 }: {
   inbound_rule_id: string
 }) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    header: await headers()
+  })
   try {
     const user = await prisma.user.findUnique({
       where: {
         email: session?.user?.email as string
       },
       include: {
-        UserData: true
+        userData: true
       }
     })
-    const rule = await prisma.inbound_rules.findUnique({
+    const rule = await prisma.inboundRules.findUnique({
       where: {
         id: inbound_rule_id,
-        UserDataId: user?.UserData?.id as string
-      },
-      include: {
-        nodes: true
+        UserDataId: user?.userData?.id as string
       }
     })
     if (!rule) {
@@ -275,20 +234,7 @@ export async function deleteInboundRule({
     }
 
     // Task 1: Delete inbound rule on node
-    const deleteInboundRuleResponse = await axios.delete(
-      INFRA_BE_URL + "/nginx",
-      {
-        data: {
-          config_id: rule.id,
-          container_name: rule?.containersName,
-          dockerHostName: rule.nodes.node_name
-        }
-      }
-    )
-
-    if (deleteInboundRuleResponse.data.return_code !== 0) {
-      throw new Error("Failed to delete inbound rule on the node")
-    }
+    // use caddy api
 
     // Task 2: Delete DNS record in cloudflare
     await CfClient.dns.records.delete(rule.cloudflare_record_id, {
@@ -296,7 +242,7 @@ export async function deleteInboundRule({
     })
 
     // Task 3: Delete inbound rule in database
-    await prisma.inbound_rules.delete({
+    await prisma.inboundRules.delete({
       where: {
         id: inbound_rule_id
       }

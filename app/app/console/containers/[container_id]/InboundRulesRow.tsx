@@ -42,7 +42,6 @@ function InboundRulesRow({
 }: {
   ConfigData: {
     id: string
-    config_name: string
     domain_name: string
     protocol: string
     container_ip: string
@@ -60,7 +59,6 @@ function InboundRulesRow({
     resolver: zodResolver(inbound_rules_schema),
     mode: "onChange",
     defaultValues: {
-      config_name: ConfigData.config_name,
       domain_name: ConfigData.domain_name,
       port: ConfigData.port
     }
@@ -114,7 +112,6 @@ function InboundRulesRow({
 
   return (
     <TableRow>
-      <TableCell>{ConfigData.config_name}</TableCell>
       <TableCell>{ConfigData.domain_name}</TableCell>
       <TableCell>{ConfigData.protocol}</TableCell>
       <TableCell>{ConfigData.container_ip}</TableCell>

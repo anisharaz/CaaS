@@ -25,33 +25,22 @@ import Link from "next/link"
 import InboundRulesRow from "./InboundRulesRow"
 import { AddInboundRule } from "./AddInboundRule"
 import { useParams, useRouter } from "next/navigation"
-import {
-  startContainer,
-  restartContainer,
-  stopContainer,
-  deleteContainer
-} from "@/app/actions/infra"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 
 function ContainerDetailTabs({
   container_name,
   nick_name,
-  node,
-  image,
   ip_address,
   createdAt,
   inbound_rules
 }: {
   container_name: string
   nick_name: string
-  node: string
-  image: string
   ip_address: string
   createdAt: Date
   inbound_rules: {
     id: string
-    config_name: string
     domain_name: string
     protocol: string
     container_ip: string
@@ -63,75 +52,59 @@ function ContainerDetailTabs({
   const params = useParams<{ container_id: string }>()
   const [loading, setLoading] = useState({
     start: false,
-    restart: false,
     stop: false,
     delete: false
   })
   async function StartContainer() {
-    if (Object.values(loading).includes(true)) {
-      alert("Please wait for the previous action to complete")
-    } else {
-      setLoading((prev) => ({ ...prev, start: true }))
-      const res = await startContainer({
-        container_name: container_name
-      })
-      if (res.success) {
-        toast.success("Container started successfully", {})
-      } else {
-        toast.error("Failed to start container", {})
-      }
-      setLoading((prev) => ({ ...prev, start: false }))
-    }
+    // if (Object.values(loading).includes(true)) {
+    //   alert("Please wait for the previous action to complete")
+    // } else {
+    //   setLoading((prev) => ({ ...prev, start: true }))
+    //   const res = await startContainer({
+    //     container_name: container_name
+    //   })
+    //   if (res.success) {
+    //     toast.success("Container started successfully", {})
+    //   } else {
+    //     toast.error("Failed to start container", {})
+    //   }
+    //   setLoading((prev) => ({ ...prev, start: false }))
+    // }
   }
-  async function ReStartContainer() {
-    if (Object.values(loading).includes(true)) {
-      alert("Please wait for the previous action to complete")
-    } else {
-      setLoading((prev) => ({ ...prev, restart: true }))
-      const res = await restartContainer({
-        container_name: container_name
-      })
-      if (res.success) {
-        toast.success("Container restarted successfully", {})
-      } else {
-        toast.error("Failed to restart container", {})
-      }
-      setLoading((prev) => ({ ...prev, restart: false }))
-    }
-  }
+
   async function StopContainer() {
-    if (Object.values(loading).includes(true)) {
-      alert("Please wait for the previous action to complete")
-    } else {
-      setLoading((prev) => ({ ...prev, stop: true }))
-      const res = await stopContainer({
-        container_name: container_name
-      })
-      if (res.success) {
-        toast.success("Container stopped successfully", {})
-      } else {
-        toast.error("Failed to stop container", {})
-      }
-      setLoading((prev) => ({ ...prev, stop: false }))
-    }
+    // if (Object.values(loading).includes(true)) {
+    //   alert("Please wait for the previous action to complete")
+    // } else {
+    //   setLoading((prev) => ({ ...prev, stop: true }))
+    //   const res = await stopContainer({
+    //     container_name: container_name
+    //   })
+    //   if (res.success) {
+    //     toast.success("Container stopped successfully", {})
+    //   } else {
+    //     toast.error("Failed to stop container", {})
+    //   }
+    //   setLoading((prev) => ({ ...prev, stop: false }))
+    // }
   }
   async function DeleteContainer() {
-    if (Object.values(loading).includes(true)) {
-      alert("Please wait for the previous action to complete")
-    } else {
-      setDeleteContainerError("")
-      setLoading((prev) => ({ ...prev, delete: true }))
-      const res = await deleteContainer({
-        container_name: container_name
-      })
-      if (res.success) {
-        toast.success("Container deleted successfully", {})
-        router.push("/console/containers")
-      } else {
-        setDeleteContainerError(res.message)
-      }
-      setLoading((prev) => ({ ...prev, delete: false }))
-    }
+    // if (Object.values(loading).includes(true)) {
+    //   alert("Please wait for the previous action to complete")
+    // } else {
+    //   setDeleteContainerError("")
+    //   setLoading((prev) => ({ ...prev, delete: true }))
+    //   const res = await deleteContainer({
+    //     container_name: container_name
+    //   })
+    //   if (res.success) {
+    //     toast.success("Container deleted successfully", {})
+    //     router.push("/console/containers")
+    //   } else {
+    //     setDeleteContainerError(res.message)
+    //   }
+    //   setLoading((prev) => ({ ...prev, delete: false }))
+    // }
   }
 
   return (
@@ -142,7 +115,7 @@ function ContainerDetailTabs({
       </TabsList>
       <TabsContent value="details" className="w-full space-y-4 px-2 pt-2">
         <div className="text-2xl font-bold">Actions</div>
-        <div className="flex flex-wrap gap-y-8 gap-4 p-5 md:p-4 justify-between rounded-xl border-2 md:gap-14 md:px-4 lg:items-center md:w-[700px] bg-gray-100 text-black dark:bg-zinc-900 dark:text-white">
+        <div className="flex flex-wrap gap-y-8 gap-4 p-5 md:p-4 justify-between rounded-xl border-2 md:gap-14 md:px-4 lg:items-center md:w-fit bg-gray-100 text-black dark:bg-zinc-900 dark:text-white">
           <div
             className="flex gap-2 cursor-pointer group hover:text-green-600"
             onClick={StartContainer}
@@ -166,19 +139,6 @@ function ContainerDetailTabs({
               <>
                 <span>Stop</span>
                 <Pause />
-              </>
-            )}
-          </div>
-          <div
-            className="flex gap-2 cursor-pointer hover:text-fuchsia-700"
-            onClick={ReStartContainer}
-          >
-            {loading.restart ? (
-              <Loader2 className="animate-spin m-auto" />
-            ) : (
-              <>
-                <span>Restart</span>
-                <RotateCcw />
               </>
             )}
           </div>
@@ -214,14 +174,6 @@ function ContainerDetailTabs({
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-
-          <Link
-            href={`${params.container_id}/terminal`}
-            className="flex gap-2 cursor-pointer hover:text-blue-500"
-          >
-            <span>Terminal</span>
-            <Terminal />
-          </Link>
         </div>
         <div className="text-2xl font-bold">Details</div>
         <div className="border-2 rounded-xl p-6 space-y-4">
@@ -233,17 +185,11 @@ function ContainerDetailTabs({
           <div className="text-lg text-gray-600 dark:text-white/80">
             <span className="font-bold">Name - </span> {nick_name}
           </div>
+
           <Separator />
           <div className="text-lg text-gray-600 dark:text-white/80">
-            <span className="font-bold">Host Node -</span> {node}
-          </div>
-          <Separator />
-          <div className="text-lg text-gray-600 dark:text-white/80">
-            <span className="font-bold">Image -</span> {image}
-          </div>
-          <Separator />
-          <div className="text-lg text-gray-600 dark:text-white/80">
-            <span className="font-bold">Internal IP - </span> {ip_address}
+            <span className="font-bold">Internal IP - </span>{" "}
+            {ip_address || "Pending"}
           </div>
           <Separator />
           <div className="text-lg text-gray-600 dark:text-white/80">
@@ -282,7 +228,6 @@ function ContainerDetailTabs({
                   key={index}
                   ConfigData={{
                     id: config.id,
-                    config_name: config.config_name,
                     domain_name: config.domain_name,
                     protocol: config.protocol,
                     container_ip: config.container_ip,

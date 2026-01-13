@@ -76,8 +76,8 @@ model InboundRules {
     updatedAt            DateTime   @updatedAt
     UserData             UserData   @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
     UserDataId           String
-    containers           containers @relation(fields: [containersName], references: [id], onDelete: Cascade)
-    containersName       String
+    containers           containers @relation(fields: [containersId], references: [id], onDelete: Cascade)
+    containersId         String
     cloudflare_zone      String
     cloudflare_record_id String
 }

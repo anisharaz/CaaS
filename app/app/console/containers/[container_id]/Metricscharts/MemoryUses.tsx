@@ -8,31 +8,29 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart"
-import { ContainerMetricsContext } from "@/context/ContainerMetricsContext"
 
 export function MemoryUsesChart() {
-  const MetrcsData = useContext(ContainerMetricsContext)
   const [ramUses, setRamUses] = useState<
     {
       RamUsedPercent: number
     }[]
   >([])
-  useEffect(() => {
-    setRamUses((prev) => {
-      if (prev.length < 30) {
-        return [
-          ...prev,
-          {
-            RamUsedPercent: MetrcsData.ramUsesPercentage
-          }
-        ]
-      } else {
-        const array = prev.slice(1)
-        array.push({ RamUsedPercent: MetrcsData.ramUsesPercentage })
-        return array
-      }
-    })
-  }, [MetrcsData])
+  // useEffect(() => {
+  //   setRamUses((prev) => {
+  //     if (prev.length < 30) {
+  //       return [
+  //         ...prev,
+  //         {
+  //           RamUsedPercent: 0
+  //         }
+  //       ]
+  //     } else {
+  //       const array = prev.slice(1)
+  //       array.push({ RamUsedPercent: 0 })
+  //       return array
+  //     }
+  //   })
+  // }, [])
 
   return (
     <Card className="w-full ">

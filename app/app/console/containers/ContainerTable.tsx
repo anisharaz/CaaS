@@ -48,6 +48,7 @@ function ContainerTable({
   const [triggetFetch, setTriggerFetch] = useState(false)
   const [container, setContainer] = useState<
     {
+      container_id: string
       container_name: string
       container_ip: string
       created_at: string
@@ -124,7 +125,7 @@ function ContainerTable({
                   <TableRow>
                     <TableCell className="font-medium  text-blue-600 underline underline-offset-2 hover:text-blue-700">
                       <Link
-                        href={`containers/${detail.container_name}`}
+                        href={`containers/${detail.container_id}`}
                         className="cursor-pointer"
                       >
                         {detail.container_name}
