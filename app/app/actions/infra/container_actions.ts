@@ -27,6 +27,12 @@ export async function createContainer({
     }
   })
 
+  const sshPort = await prisma.sshProxyAvailablePorts.findFirst({
+    where: {
+      used: false
+    }
+  })
+
   const res = await prisma.containers.create({
     data: {
       id: v4(),
@@ -34,7 +40,8 @@ export async function createContainer({
       vpcId: vpc_id,
       UserDataId: user?.userData?.id as string,
       SshKeysId: ssh_key_id,
-      state: "PENDING"
+      state: "PENDING",
+      SshPortId: sshPort?.id as string
     }
   })
   const payload = {
@@ -50,7 +57,18 @@ export async function createContainer({
   }
 
   const command = new PublishCommand(params)
+
   const response = await snsClient.send(command)
+
+  await prisma.sshProxyAvailablePorts.update({
+    where: {
+      id: sshPort?.id
+    },
+    data: {
+      used: true
+    }
+  })
+
   try {
     return {
       success: true,
