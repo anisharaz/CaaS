@@ -23,7 +23,17 @@ export async function createContainer({
   const user = await prisma.user.findUnique({
     where: { id: session?.user.id },
     include: {
-      userData: true
+      userData: {
+        include: {
+          incusProject: true
+        }
+      }
+    }
+  })
+
+  const sshkey = await prisma.sshKeys.findUnique({
+    where: {
+      id: ssh_key_id
     }
   })
 
@@ -46,7 +56,10 @@ export async function createContainer({
   })
   const payload = {
     action: "CREATE",
-    container: res
+    container: res,
+    sshkey: sshkey?.publicKey as string,
+    project: user?.userData?.incusProject?.id as string,
+    sshport: sshPort?.sshProxyPort as number
   }
 
   const params = {

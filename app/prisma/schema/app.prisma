@@ -10,17 +10,17 @@ enum USER_STATE {
 }
 
 model UserData {
-    id            String         @id @default(cuid())
-    user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId        String         @unique
-    username      String?
-    userState     USER_STATE     @default(NEW)
-    Vpc           Vpc[]
-    InboundRules  InboundRules[]
-    containers    containers[]
-    SshKeys       SshKeys[]
-    user_type     USER_TYPE      @default(FREE)
-    incusProjects IncusProject[]
+    id           String         @id @default(cuid())
+    user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId       String         @unique
+    username     String?
+    userState    USER_STATE     @default(NEW)
+    Vpc          Vpc[]
+    InboundRules InboundRules[]
+    containers   containers[]
+    SshKeys      SshKeys[]
+    user_type    USER_TYPE      @default(FREE)
+    incusProject IncusProject?
 }
 
 model IncusProject {
@@ -29,7 +29,7 @@ model IncusProject {
     createdAt  DateTime @default(now())
     updatedAt  DateTime @updatedAt
     UserData   UserData @relation(fields: [UserDataId], references: [id])
-    UserDataId String
+    UserDataId String   @unique
 }
 
 model Vpc {

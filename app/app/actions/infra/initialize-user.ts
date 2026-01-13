@@ -8,7 +8,6 @@ import {
 import prisma from "@/lib/db"
 import { nanoid } from "nanoid"
 import { headers } from "next/headers"
-
 export async function initializeUser({ username }: { username: string }) {
   const session = await auth.api.getSession({
     headers: await headers()
@@ -25,6 +24,9 @@ export async function initializeUser({ username }: { username: string }) {
     const user = await prisma.user.findUnique({
       where: {
         email: session?.user?.email as string
+      },
+      include: {
+        userData: true
       }
     })
 
@@ -41,6 +43,12 @@ export async function initializeUser({ username }: { username: string }) {
           id: vpcID,
           vpcName: "default",
           UserDataId: ud.id
+        }
+      })
+      await tx.incusProject.create({
+        data: {
+          id: incusProjectId,
+          UserDataId: user?.userData?.id as string
         }
       })
     })

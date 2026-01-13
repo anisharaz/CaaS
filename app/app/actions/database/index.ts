@@ -6,7 +6,6 @@ import prisma from "@/lib/db"
 import { InvokeCommand } from "@aws-sdk/client-lambda"
 import { nanoid } from "nanoid"
 import { headers } from "next/dist/server/request/headers"
-import SshPK from "sshpk"
 
 export async function CreateAndSaveSSHKey({ key_name }: { key_name: string }) {
   const session = await auth.api.getSession({
