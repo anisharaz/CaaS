@@ -10,17 +10,18 @@ enum USER_STATE {
 }
 
 model UserData {
-    id           String         @id @default(cuid())
-    user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId       String         @unique
-    username     String?
-    userState    USER_STATE     @default(NEW)
-    Vpc          Vpc[]
-    InboundRules InboundRules[]
-    containers   containers[]
-    SshKeys      SshKeys[]
-    user_type    USER_TYPE      @default(FREE)
-    incusProject IncusProject?
+    id                 String              @id @default(cuid())
+    user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId             String              @unique
+    username           String?
+    userState          USER_STATE          @default(NEW)
+    Vpc                Vpc[]
+    InboundRules       InboundRules[]
+    containers         containers[]
+    SshKeys            SshKeys[]
+    user_type          USER_TYPE           @default(FREE)
+    incusProject       IncusProject?
+    resourcesAndLimits ResourcesAndLimits?
 }
 
 model IncusProject {
@@ -99,4 +100,12 @@ model SshKeys {
     UserData   UserData     @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
     UserDataId String
     containers containers[]
+}
+
+model ResourcesAndLimits {
+    id             String   @id @default(cuid())
+    userData       UserData @relation(fields: [userDataId], references: [id], onDelete: Cascade)
+    userDataId     String   @unique
+    container      Int      @default(0)
+    containerLimit Int      @default(2)
 }

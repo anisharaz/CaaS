@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Server, Terminal, Rocket, ArrowRight, Github } from "lucide-react"
+import Image from "next/image"
 
 const steps = [
   {
@@ -106,13 +107,12 @@ function Home() {
         <div className="mt-8 max-w-4xl">
           <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed border-muted-foreground/25 bg-muted/30">
             <div className="text-center px-4">
-              <Server className="mx-auto h-10 w-10 text-muted-foreground/50" />
-              <p className="mt-4 text-sm text-muted-foreground">
-                Architecture diagram placeholder
-              </p>
-              <p className="text-xs text-muted-foreground/60 mt-1">
-                Add your system architecture image here
-              </p>
+              <Image
+                src={"/arch.png"}
+                alt="System Architecture Diagram"
+                width={800}
+                height={450}
+              />
             </div>
           </div>
         </div>
