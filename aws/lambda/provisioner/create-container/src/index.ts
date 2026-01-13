@@ -1,6 +1,7 @@
 import { SQSEvent } from "aws-lambda";
 import axios from "axios";
 import * as https from "https";
+import { Client } from "pg";
 
 function GetCloudInitConfig(sshkey: string) {
   return `
@@ -121,7 +122,24 @@ export const handler = async (event: SQSEvent) => {
       console.log("create proxy port: ", response.data);
     });
 
-  // TODO: update the database with ip address and status
+  // Update the database with IP address and status
+  const pgClient = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+
+  try {
+    await pgClient.connect();
+    await pgClient.query(
+      `UPDATE "containers" SET "ipAddress" = $1, "state" = $2, "updatedAt" = $3 WHERE "id" = $4`,
+      [containerIp, "RUNNING", new Date(), body.container.id]
+    );
+    console.log("Database updated successfully");
+  } catch (error) {
+    console.error("Failed to update database:", error);
+    throw error;
+  } finally {
+    await pgClient.end();
+  }
 
   return {
     statusCode: 200,
