@@ -1,7 +1,6 @@
 import { TriangleAlert } from "lucide-react"
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth"
 import prisma from "@/lib/db"
-import { LogoutButton } from "@/components/LoginLogoutButton"
 
 import {
   Table,
@@ -14,24 +13,21 @@ import {
 import DeleteSSHKey from "./DeleteSSHKey"
 import AddSSHKeys from "./SSHKeys,"
 import DownloadSSHKeys from "./DownloadSSHKey"
+import { headers } from "next/headers"
+import { Button } from "@/components/ui/button"
 
 async function Profile() {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
   const user = await prisma.user.findUnique({
     where: {
       email: session?.user?.email as string
     },
     include: {
-      UserData: {
+      userData: {
         select: {
-          ssh_keys: {
-            select: {
-              nick_name: true,
-              id: true,
-              private_key: true,
-              public_key: true
-            }
-          },
+          SshKeys: true,
           username: true
         }
       }
@@ -39,23 +35,15 @@ async function Profile() {
   })
   return (
     <div className="md:m-6 m-2 md:space-y-4 space-y-2">
-      <div className="flex items-center gap-6 border-2 rounded-lg p-4 text-sm text-yellow-400">
-        <TriangleAlert className="h-8 w-8" />
-        <div>
-          <p className="text-lg">Warning! </p>
-          <p>Container performance on the free plan may fluctuate.</p>
-          <p>Upgrade to Premium for reliable and consistent performance!</p>
-        </div>
-      </div>
       <div className="md:space-y-4 space-y-2">
         <div className="flex justify-between">
           <div className="text-2xl font-bold text-amber-500">Account</div>
-          <LogoutButton />
+          <Button>Logout</Button>
         </div>
         <div className="md:p-6 p-3 rounded-xl border-2 space-y-4 flex flex-col">
           <div className="md:grid md:space-x-10 grid-cols-2 flex flex-col md:gap-4 gap-2">
             <div>
-              <div className="font-bold">Account ID</div>
+              <div className="font-bold">AccountID</div>
               <div>{user?.id}</div>
             </div>
             <div>
@@ -70,7 +58,7 @@ async function Profile() {
             </div>
             <div>
               <div className="font-bold">User Name</div>
-              <div>{user?.UserData?.username}</div>
+              <div>{user?.userData?.username}</div>
             </div>
           </div>
         </div>
@@ -115,17 +103,18 @@ async function Profile() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {user?.UserData?.ssh_keys.map((ssh_key) => (
+                {user?.userData?.SshKeys.map((ssh_key) => (
                   <TableRow key={ssh_key.id}>
                     <TableCell className="font-medium">
-                      {ssh_key.nick_name}
+                      {ssh_key.name}
                     </TableCell>
                     <TableCell className="flex justify-end md:gap-4 gap-2">
-                      <DownloadSSHKeys
+                      {/* <DownloadSSHKeys
                         ssh_private_key={ssh_key.private_key}
                         ssh_key_nick_name={ssh_key.nick_name}
                         ssh_public_key={ssh_key.public_key}
-                      />
+                      /> */}
+                      download button
                       <DeleteSSHKey id={ssh_key.id} />
                     </TableCell>
                   </TableRow>

@@ -32,19 +32,18 @@ import ContainerStatusBadge from "@/components/ContainerStatusBadge"
 import { toast } from "sonner"
 import Image from "next/image"
 
-// TODO: update the code to show provisioning state containers
 function ContainerTable({
   vpcs
 }: {
   vpcs:
     | {
-        vpc_name: string
+        vpcName: string
         id: string
       }[]
     | undefined
 }) {
   const [vpc, setVpc] = useState(() => {
-    return vpcs?.filter((vpc) => vpc.vpc_name === DEFAULT_VPC_NAME)[0]?.id
+    return vpcs?.filter((vpc) => vpc.vpcName === DEFAULT_VPC_NAME)[0]?.id
   })
   const [vpcFetchLoading, setVpcFetchLoading] = useState(false)
   const [triggetFetch, setTriggerFetch] = useState(false)
@@ -59,7 +58,7 @@ function ContainerTable({
     }[]
   >([])
   const DefaultVPCID = vpcs?.filter(
-    (vpc) => vpc.vpc_name === DEFAULT_VPC_NAME
+    (vpc) => vpc.vpcName === DEFAULT_VPC_NAME
   )[0]?.id
   useEffect(() => {
     async function getContainers() {
@@ -93,7 +92,7 @@ function ContainerTable({
             <SelectGroup>
               {vpcs?.map((vpc) => (
                 <SelectItem key={vpc.id} value={vpc.id}>
-                  {vpc.vpc_name}
+                  {vpc.vpcName}
                 </SelectItem>
               ))}
             </SelectGroup>
@@ -115,7 +114,6 @@ function ContainerTable({
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Node</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="text-right">Internal IP</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -139,7 +137,6 @@ function ContainerTable({
                         container_name={detail.container_name}
                       />
                     </TableCell>
-                    <TableCell>{detail.node}</TableCell>
                     <TableCell className="md:hidden">
                       {new Date(detail.created_at).toISOString().split("T")[0]}
                     </TableCell>
