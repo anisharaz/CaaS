@@ -1,6 +1,6 @@
 import { SQSEvent } from "aws-lambda";
 export const handler = async (event: SQSEvent) => {
-  console.log("Event: ", JSON.stringify(event, null, 2));
+  const body: {} = JSON.parse(event.Records[0].body);
   return {
     statusCode: 200,
     body: JSON.stringify({
