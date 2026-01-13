@@ -96,7 +96,7 @@ export const handler = async (event: SQSEvent) => {
 
   for (let i = 0; i < 5; i++) {
     const res = await axiosInstance.get(
-      `/instances/${body.container.id}/state`
+      `/instances/${body.container.id}/state?project=${body.project}`
     );
 
     if (res.data.metadata.status == "Running") {
@@ -117,7 +117,10 @@ export const handler = async (event: SQSEvent) => {
   };
 
   await axiosInstance
-    .patch(`/1.0/instances/${body.container.id}`, proxyPortBody)
+    .patch(
+      `/instances/${body.container.id}?project=${body.project}`,
+      proxyPortBody
+    )
     .then((response) => {
       console.log("create proxy port: ", response.data);
     });

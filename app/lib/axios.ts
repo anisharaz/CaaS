@@ -31,7 +31,16 @@ async function createNetwork(name: string): Promise<AxiosResponse> {
  */
 async function createProject(projectName: string): Promise<AxiosResponse> {
   const payload = {
-    name: projectName
+    name: projectName,
+    config: {
+      restricted: "false",
+      "features.images": "false",
+      "features.profiles": "true",
+      "features.networks": "false",
+      "features.networks.zones": "false",
+      "features.storage.buckets": "true",
+      "features.storage.volumes": "true"
+    }
   }
 
   const resp = await axiosInstance.post("/projects", payload)
