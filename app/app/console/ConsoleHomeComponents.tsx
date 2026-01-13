@@ -18,11 +18,12 @@ import {
 import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
-import ContainerStatusBadge from "@/components/ContainerStatusBadge"
+// import ContainerStatusBadge from "@/components/ContainerStatusBadge"
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { DEFAULT_VPC_NAME } from "@/lib/vars"
 import axios from "axios"
+import { Badge } from "@/components/ui/badge"
 
 export function ConsoleOptions() {
   return (
@@ -170,10 +171,10 @@ export function ConsoleContainers({
                   {container.container_name}
                 </TableCell>
                 <TableCell className="">
-                  {container.container_ip || 0}
+                  {container.container_ip || "Pending IP..."}
                 </TableCell>
                 <TableCell className="flex justify-end text-right">
-                  <ContainerStatusBadge container_name={container.status} />
+                  <Badge>{container.status}</Badge>
                 </TableCell>
               </TableRow>
             ))}

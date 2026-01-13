@@ -49,22 +49,21 @@ enum CONTAINER_STATE {
 }
 
 model containers {
-    id           String                 @id
+    id           String                  @id
     name         String
-    image        String
     state        CONTAINER_STATE
-    createdAt    DateTime               @default(now())
-    updatedAt    DateTime               @updatedAt
-    Vpc          Vpc                    @relation(fields: [vpcId], references: [id], onDelete: Cascade)
+    createdAt    DateTime                @default(now())
+    updatedAt    DateTime                @updatedAt
+    Vpc          Vpc                     @relation(fields: [vpcId], references: [id], onDelete: Cascade)
     vpcId        String
     ipAddress    String?
     InboundRules InboundRules[]
-    UserData     UserData               @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+    UserData     UserData                @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
     UserDataId   String
-    SshKeys      SshKeys                @relation(fields: [SshKeysId], references: [id])
+    SshKeys      SshKeys                 @relation(fields: [SshKeysId], references: [id])
     SshKeysId    String
-    SshPort      SshProxyAvailablePorts @relation(fields: [SshPortId], references: [id])
-    SshPortId    String                 @unique
+    SshPort      SshProxyAvailablePorts? @relation(fields: [SshPortId], references: [id])
+    SshPortId    String?                 @unique
 }
 
 model InboundRules {

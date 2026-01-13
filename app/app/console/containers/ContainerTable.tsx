@@ -28,9 +28,8 @@ import { DEFAULT_VPC_NAME } from "@/lib/vars"
 import axios from "axios"
 import { Loader2, RotateCcw, Copy } from "lucide-react"
 import Link from "next/link"
-import ContainerStatusBadge from "@/components/ContainerStatusBadge"
 import { toast } from "sonner"
-import Image from "next/image"
+import { Badge } from "@/components/ui/badge"
 
 function ContainerTable({
   vpcs
@@ -50,11 +49,10 @@ function ContainerTable({
   const [container, setContainer] = useState<
     {
       container_name: string
-      container_nick_name: string
       container_ip: string
-      node: string
       created_at: string
       ssh_port: string
+      status: string
     }[]
   >([])
   const DefaultVPCID = vpcs?.filter(
@@ -129,13 +127,11 @@ function ContainerTable({
                         href={`containers/${detail.container_name}`}
                         className="cursor-pointer"
                       >
-                        {detail.container_nick_name}
+                        {detail.container_name}
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <ContainerStatusBadge
-                        container_name={detail.container_name}
-                      />
+                      <Badge>{detail.status}</Badge>
                     </TableCell>
                     <TableCell className="md:hidden">
                       {new Date(detail.created_at).toISOString().split("T")[0]}
@@ -144,19 +140,12 @@ function ContainerTable({
                       {new Date(detail.created_at).toUTCString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      {detail.container_ip}
+                      {detail.container_ip || "Pending..."}
                     </TableCell>
                     <TableCell className="text-right flex justify-end items-center">
                       <Dialog>
                         <DialogTrigger className="flex items-center space-x-2 hover:bg-zinc-600 p-1 rounded-lg ">
                           <div>SSH</div>
-                          <Image
-                            src={"https://static.aaraz.me/caas/ssh.png"}
-                            height={64}
-                            width={64}
-                            alt=""
-                            className="w-6"
-                          />
                         </DialogTrigger>
                         <DialogContent className="md:w-fit">
                           <DialogHeader>

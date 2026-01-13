@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.967.0",
+    "@aws-sdk/client-sns": "^3.967.0",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "7.1.0",

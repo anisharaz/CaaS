@@ -68,7 +68,7 @@ export function CreateContainer({
       ssh_key_id: FormData.ssh_key_id
     })
     if (res.success) {
-      toast.success("Container created successfully")
+      toast.success("Container scheduled successfully")
       reset()
       router.refresh()
     } else {

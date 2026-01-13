@@ -5,3 +5,6 @@ export enum ContainerActions {
   STOP = "stop",
   RESTART = "restart"
 }
+
+export const AWS_CAAS_SNS_TOPIC_ARN = process.env
+  .AWS_CAAS_SNS_TOPIC_ARN as string

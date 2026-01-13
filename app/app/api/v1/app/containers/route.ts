@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         container_name: container.name,
         container_ip: container.ipAddress,
         created_at: container.createdAt,
-        ssh_port: container.SshPort.sshProxyPort,
+        ssh_port: container.SshPort?.sshProxyPort,
         status: container.state
       }
     })
