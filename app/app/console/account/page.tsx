@@ -109,12 +109,11 @@ async function Profile() {
                       {ssh_key.name}
                     </TableCell>
                     <TableCell className="flex justify-end md:gap-4 gap-2">
-                      {/* <DownloadSSHKeys
-                        ssh_private_key={ssh_key.private_key}
-                        ssh_key_nick_name={ssh_key.nick_name}
-                        ssh_public_key={ssh_key.public_key}
-                      /> */}
-                      download button
+                      <DownloadSSHKeys
+                        ssh_private_key={ssh_key.privateKey}
+                        ssh_key_nick_name={ssh_key.name}
+                        ssh_public_key={ssh_key.publicKey}
+                      />
                       <DeleteSSHKey id={ssh_key.id} />
                     </TableCell>
                   </TableRow>

@@ -33,7 +33,7 @@ function DownloadSSHKeys({
         <DialogFooter className="grid grid-cols-2">
           <a
             href={`data:text/plain;charset=utf-8,${encodeURIComponent(ssh_private_key)}`}
-            download={`${ssh_key_nick_name}_private.key`}
+            download={`${ssh_key_nick_name}_private.pem`}
           >
             <Button size={"sm"}>Private Key</Button>
           </a>
