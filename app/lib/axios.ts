@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios"
 import * as https from "https"
 import * as fs from "fs"
-const baseUrl = process.env.INCUS_HOST + "/1.0"
+const baseUrl = process.env.NEXT_PUBLIC_INCUS_HOST + "/1.0"
 
 // Create axios instance with SSL configuration
 const axiosInstance = axios.create({
