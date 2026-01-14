@@ -33,20 +33,20 @@ export function AddInboundRule({ container_name }: { container_name: string }) {
     mode: "onBlur"
   })
   const onSubmit: SubmitHandler<AddInboundRuleSchema> = async (FormData) => {
-    const res = await createInboundRule({
-      config_name: FormData.rule_name,
-      domain_name: FormData.domain_name,
-      container_port: FormData.port,
-      container_name: container_name
-    })
-    if (res.success) {
-      router.refresh()
-      toast.success("Inbound rule added successfully")
-      reset()
-      alert("Inbound rule added successfully")
-    } else {
-      toast.error(res.message)
-    }
+    // const res = await createInboundRule({
+    //   config_name: FormData.rule_name,
+    //   domain_name: FormData.domain_name,
+    //   container_port: FormData.port,
+    //   container_name: container_name
+    // })
+    // if (res.success) {
+    //   router.refresh()
+    //   toast.success("Inbound rule added successfully")
+    //   reset()
+    //   alert("Inbound rule added successfully")
+    // } else {
+    //   toast.error(res.message)
+    // }
   }
 
   return (
