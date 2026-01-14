@@ -2,6 +2,49 @@ import { SQSEvent } from "aws-lambda";
 import axios from "axios";
 import * as https from "https";
 import { Client } from "pg";
+import {
+  SchedulerClient,
+  CreateScheduleCommand,
+} from "@aws-sdk/client-scheduler";
+
+async function createScheduleAfter30Minutes({
+  minutes = 30,
+  targetARN,
+  schedularRoleARN,
+  data,
+  id,
+}: {
+  minutes?: number;
+  targetARN: string;
+  schedularRoleARN: string;
+  data: Record<string, any>;
+  id: string;
+}) {
+  const schedularClient = new SchedulerClient({ region: "us-east-1" });
+  function getAtExpressionAfterMinutes(minutes: number) {
+    const date = new Date(Date.now() + minutes * 60 * 1000);
+    return `at(${date.toISOString().split(".")[0]})`;
+  }
+
+  const command = new CreateScheduleCommand({
+    Name: `ct-id-${id}`, // ensure uniqueness
+    ScheduleExpression: getAtExpressionAfterMinutes(minutes),
+    ActionAfterCompletion: "DELETE",
+    FlexibleTimeWindow: {
+      Mode: "OFF",
+    },
+    Target: {
+      Arn: targetARN,
+      RoleArn: schedularRoleARN,
+      Input: JSON.stringify(data),
+    },
+    Description:
+      "Invoke Lambda to auto-delete CaaS instance after specified time",
+  });
+
+  const res = await schedularClient.send(command);
+  console.log("Scheduler created:", res.ScheduleArn);
+}
 
 function GetCloudInitConfig(sshkey: string) {
   return `
@@ -26,6 +69,7 @@ runcmd:
   - systemctl restart ssh
 `;
 }
+
 export const handler = async (event: SQSEvent) => {
   const body: {
     action: string;
@@ -44,6 +88,7 @@ export const handler = async (event: SQSEvent) => {
     sshkey: string;
     project: string;
     sshport: number;
+    autoDelete: boolean;
   } = JSON.parse(event.Records[0].body);
   console.log(body);
   const incusClientCrtBase64 = process.env.INCUS_CLIENT_CRT_BASE64;
@@ -130,6 +175,8 @@ export const handler = async (event: SQSEvent) => {
     connectionString: process.env.DATABASE_URL,
   });
 
+  let resourcesAndLimitsId = "";
+
   try {
     await pgClient.connect();
     await pgClient.query(
@@ -137,11 +184,41 @@ export const handler = async (event: SQSEvent) => {
       [containerIp, "RUNNING", new Date(), body.container.id]
     );
     console.log("Database updated successfully");
+
+    // Get resourcesAndLimitsId using userDataId
+    const resourcesResult = await pgClient.query(
+      `SELECT "id" FROM "ResourcesAndLimits" WHERE "userDataId" = $1`,
+      [body.container.UserDataId]
+    );
+    if (resourcesResult.rows.length > 0) {
+      resourcesAndLimitsId = resourcesResult.rows[0].id;
+    }
   } catch (error) {
     console.error("Failed to update database:", error);
     throw error;
   } finally {
     await pgClient.end();
+  }
+  if (body.autoDelete) {
+    await createScheduleAfter30Minutes({
+      minutes: Number(process.env.AUTO_DELETE_AFTER_MINUTES) || 30,
+      targetARN: process.env.DELETE_CONTAINER_LAMBDA_FUNCTION_ARN!,
+      schedularRoleARN: process.env.AWS_EVENT_BRIDGE_SCHEDULAR_ROLE!,
+      id: body.container.id,
+      data: {
+        Records: [
+          {
+            body: JSON.stringify({
+              action: "DELETE",
+              sshProxyAvailablePortsId: body.container.SshPortId,
+              containerId: body.container.id,
+              resourcesAndLimitsId: resourcesAndLimitsId,
+              incusProjectId: body.project,
+            }),
+          },
+        ],
+      },
+    });
   }
 
   return {

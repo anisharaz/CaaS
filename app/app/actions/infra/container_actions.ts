@@ -90,7 +90,8 @@ export async function createContainer({
       container: res,
       sshkey: sshkey?.publicKey as string,
       project: user?.userData?.incusProject?.id as string,
-      sshport: sshPort?.sshProxyPort as number
+      sshport: sshPort?.sshProxyPort as number,
+      autoDelete: true
     }
 
     const params = {

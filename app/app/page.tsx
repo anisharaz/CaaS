@@ -58,10 +58,39 @@ function Home() {
             </Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link href="https://github.com" target="_blank">
+            <Link
+              href="https://github.com/anisharaz/centralresume"
+              target="_blank"
+            >
               <Github className="mr-2 h-4 w-4" /> View Source
             </Link>
           </Button>
+        </div>
+      </section>
+
+      {/* Architecture Section */}
+      <section className="container mx-auto px-4 py-16">
+        <h2 className="text-2xl font-bold tracking-tight">
+          System Architecture
+        </h2>
+        <p className="mt-2 text-muted-foreground">
+          An overview of how the different components work together
+        </p>
+
+        {/* Architecture Image */}
+        <div className="mt-8 w-full max-w-6xl mx-auto">
+          <div className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-b from-muted/50 to-muted/20 p-2 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:border-border">
+            <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden">
+              <Image
+                src={"/arch.png"}
+                alt="System Architecture Diagram"
+                fill
+                className="object-contain"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1152px"
+                priority
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -91,30 +120,6 @@ function Home() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      </section>
-
-      {/* Architecture Section */}
-      <section className="container mx-auto px-4 py-16">
-        <h2 className="text-2xl font-bold tracking-tight">
-          System Architecture
-        </h2>
-        <p className="mt-2 text-muted-foreground">
-          An overview of how the different components work together
-        </p>
-
-        {/* Image Placeholder */}
-        <div className="mt-8 max-w-4xl">
-          <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed border-muted-foreground/25 bg-muted/30">
-            <div className="text-center px-4">
-              <Image
-                src={"/arch.png"}
-                alt="System Architecture Diagram"
-                width={800}
-                height={450}
-              />
-            </div>
-          </div>
         </div>
       </section>
 

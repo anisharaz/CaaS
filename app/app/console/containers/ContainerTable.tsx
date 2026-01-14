@@ -79,7 +79,7 @@ function ContainerTable({
   useEffect(() => {
     const interval = setInterval(() => {
       setTriggerFetch((prev) => !prev)
-    }, 3000)
+    }, 5000)
     return () => clearInterval(interval)
   }, [])
   return (
