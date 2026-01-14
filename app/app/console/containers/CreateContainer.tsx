@@ -34,8 +34,8 @@ export function CreateContainer({
   vpcs,
   ssh_keys
 }: {
-  vpcs: { id: string; vpc_name: string }[] | undefined
-  ssh_keys: { id: string; nick_name: string }[] | undefined
+  vpcs: { id: string; vpcName: string }[] | undefined
+  ssh_keys: { id: string; name: string }[] | undefined
 }) {
   const router = useRouter()
   type ContainerCreationSchema = z.infer<typeof container_create_schema>
@@ -52,13 +52,13 @@ export function CreateContainer({
     resolver: zodResolver(container_create_schema),
     mode: "onChange",
     defaultValues: {
-      vpc_id: vpcs?.filter((item) => item.vpc_name === DEFAULT_VPC_NAME)[0].id
+      vpc_id: vpcs?.filter((item) => item.vpcName === DEFAULT_VPC_NAME)[0].id
     }
   })
 
   const UserVPCs = vpcs
   const defaultVPCID = UserVPCs?.filter(
-    (item) => item.vpc_name === DEFAULT_VPC_NAME
+    (item) => item.vpcName === DEFAULT_VPC_NAME
   )[0].id
 
   const onSubmit: SubmitHandler<ContainerCreationSchema> = async (FormData) => {
@@ -68,7 +68,7 @@ export function CreateContainer({
       ssh_key_id: FormData.ssh_key_id
     })
     if (res.success) {
-      toast.success("Container created successfully")
+      toast.success("Container scheduled successfully")
       reset()
       router.refresh()
     } else {
@@ -127,7 +127,7 @@ export function CreateContainer({
                       <SelectGroup id="vpc">
                         {UserVPCs?.map((item) => (
                           <SelectItem key={item.id} value={item.id}>
-                            {item.vpc_name}
+                            {item.vpcName}
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -163,7 +163,7 @@ export function CreateContainer({
                         {ssh_keys?.map((sshkey) => {
                           return (
                             <SelectItem key={sshkey.id} value={sshkey.id}>
-                              {sshkey.nick_name}
+                              {sshkey.name}
                             </SelectItem>
                           )
                         })}

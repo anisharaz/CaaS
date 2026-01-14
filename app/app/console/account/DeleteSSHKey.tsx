@@ -1,5 +1,5 @@
 "use client"
-import { deleteSSHKey } from "@/app/actions/database"
+// import { deleteSSHKey } from "@/app/actions/database"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -19,14 +19,14 @@ function DeleteSSHKey({ id }: { id: string }) {
   const [loading, setLoading] = useState(false)
   async function Deletesshkey() {
     setLoading(true)
-    const res = await deleteSSHKey({
-      id: id
-    })
-    if (res.success) {
-      router.refresh()
-    } else {
-      alert(res.message)
-    }
+    // const res = await deleteSSHKey({
+    //   id: id
+    // })
+    // if (res.success) {
+    //   router.refresh()
+    // } else {
+    //   alert(res.message)
+    // }
     setLoading(false)
   }
   return (

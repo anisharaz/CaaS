@@ -48,7 +48,7 @@ function CreateNewSSHKeys() {
         </div>
         {loading ? (
           <Button disabled size={"sm"} className="w-full">
-            <Loader2 />{" "}
+            <Loader2 className="animate-spin" />
           </Button>
         ) : (
           <Button

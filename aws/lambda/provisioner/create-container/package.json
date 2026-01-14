@@ -1,0 +1,22 @@
+{
+  "name": "create-container",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "tsc -b"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.159",
+    "@types/node": "^25.0.3",
+    "@types/pg": "^8.16.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-scheduler": "^3.968.0",
+    "axios": "^1.13.2",
+    "pg": "^8.16.3"
+  }
+}

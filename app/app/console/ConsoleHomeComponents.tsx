@@ -18,11 +18,12 @@ import {
 import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
-import ContainerStatusBadge from "@/components/ContainerStatusBadge"
+// import ContainerStatusBadge from "@/components/ContainerStatusBadge"
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { DEFAULT_VPC_NAME } from "@/lib/vars"
 import axios from "axios"
+import { Badge } from "@/components/ui/badge"
 
 export function ConsoleOptions() {
   return (
@@ -33,11 +34,11 @@ export function ConsoleOptions() {
       <div className="p-4 text-md md:text-xl space-y-4">
         <Link href={"/console/account"} className="flex gap-4 items-center">
           <Image
-            src={"https://static.aaraz.me/caas/profile_logo.png"}
+            src={"/account.jpeg"}
             alt=""
             height={100}
             width={100}
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-2xl"
           />
           <div className="text-blue-700 hover:text-blue-900 hover:underline underline-offset-2 cursor-pointer">
             Account
@@ -46,11 +47,11 @@ export function ConsoleOptions() {
         <Separator />
         <Link href={"/console/containers"} className="flex gap-4 items-center">
           <Image
-            src={"https://static.aaraz.me/caas/container_logo.svg"}
+            src={"/container.png"}
             alt=""
             height={100}
             width={100}
-            className="h-7 w-7"
+            className="h-7 w-7 rounded-2xl"
           />
           <div className="text-blue-700 hover:text-blue-900 hover:underline underline-offset-2 cursor-pointer">
             My Containers
@@ -59,11 +60,11 @@ export function ConsoleOptions() {
         <Separator />
         <Link href={"/console/vpc"} className="flex gap-4 items-center">
           <Image
-            src={"https://static.aaraz.me/caas/vpc_logo.svg"}
+            src={"/vpc.svg"}
             alt=""
             height={100}
             width={100}
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-2xl"
           />
           <div className="text-blue-700 hover:text-blue-900 hover:underline underline-offset-2 cursor-pointer">
             My VPCs
@@ -92,24 +93,25 @@ export function ConsoleContainers({
 }: {
   vpcs:
     | {
-        vpc_name: string
+        vpcName: string
         id: string
       }[]
     | undefined
 }) {
   const [vpc, setVpc] = useState(() => {
-    return vpcs?.filter((vpc) => vpc.vpc_name === DEFAULT_VPC_NAME)[0]?.id
+    return vpcs?.filter((vpc) => vpc.vpcName === DEFAULT_VPC_NAME)[0]?.id
   })
   const [vpcFetchLoading, setVpcFetchLoading] = useState(false)
   const [container, setContainer] = useState<
     {
+      container_id: string
       container_name: string
-      container_nick_name: string
       container_ip: string
+      status: string
     }[]
   >([])
   const DefaultVPCID = vpcs?.filter(
-    (vpc) => vpc.vpc_name === DEFAULT_VPC_NAME
+    (vpc) => vpc.vpcName === DEFAULT_VPC_NAME
   )[0]?.id
   useEffect(() => {
     async function getContainers() {
@@ -137,14 +139,14 @@ export function ConsoleContainers({
               setVpc(e)
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-45">
               <SelectValue placeholder="Select a Vpc" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 {vpcs?.map((vpc) => (
                   <SelectItem key={vpc.id} value={vpc.id}>
-                    {vpc.vpc_name}
+                    {vpc.vpcName}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -153,26 +155,26 @@ export function ConsoleContainers({
           {vpcFetchLoading && <Loader2 className="w-6 h-6 animate-spin" />}
         </div>
       </div>
-      <div className="md:h-[600px] max-h-[300px] md:max-h-[600px] overflow-auto">
+      <div className="md:h-150 max-h-75 md:max-h-150 overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Name</TableHead>
+              <TableHead className="w-50">Name</TableHead>
               <TableHead className="">Container IP</TableHead>
               <TableHead className="text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {container.map((container) => (
-              <TableRow key={container.container_name}>
+              <TableRow key={container.container_id}>
                 <TableCell className="font-medium">
-                  {container.container_nick_name}
+                  {container.container_name}
                 </TableCell>
-                <TableCell className="">{container.container_ip}</TableCell>
+                <TableCell className="">
+                  {container.container_ip || "Pending IP..."}
+                </TableCell>
                 <TableCell className="flex justify-end text-right">
-                  <ContainerStatusBadge
-                    container_name={container.container_name}
-                  />
+                  <Badge>{container.status}</Badge>
                 </TableCell>
               </TableRow>
             ))}

@@ -33,7 +33,7 @@ import { SubmitHandler, useForm } from "react-hook-form"
 import { inbound_rules_schema } from "@/lib/zod"
 import { z } from "zod"
 import { useState } from "react"
-import { deleteInboundRule, editInboundRule } from "@/app/actions/infra"
+import { deleteInboundRule } from "@/app/actions/infra"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -42,7 +42,6 @@ function InboundRulesRow({
 }: {
   ConfigData: {
     id: string
-    config_name: string
     domain_name: string
     protocol: string
     container_ip: string
@@ -60,32 +59,31 @@ function InboundRulesRow({
     resolver: zodResolver(inbound_rules_schema),
     mode: "onChange",
     defaultValues: {
-      config_name: ConfigData.config_name,
       domain_name: ConfigData.domain_name,
       port: ConfigData.port
     }
   })
 
   const onSubmit: SubmitHandler<Schema> = async (formData) => {
-    setError("root", {
-      message: ""
-    })
-    const res = await editInboundRule({
-      config_name: formData.config_name,
-      domain_name: formData.domain_name,
-      container_port: formData.port,
-      inbound_rule_id: ConfigData.id
-    })
-    if (res.success) {
-      router.refresh()
-      toast.success("Inbound rule updated successfully")
-      alert("Inbound rule updated successfully")
-    } else {
-      setError("root", {
-        message: res.message
-      })
-      toast.error(res.message)
-    }
+    // setError("root", {
+    //   message: ""
+    // })
+    // const res = await editInboundRule({
+    //   config_name: formData.config_name,
+    //   domain_name: formData.domain_name,
+    //   container_port: formData.port,
+    //   inbound_rule_id: ConfigData.id
+    // })
+    // if (res.success) {
+    //   router.refresh()
+    //   toast.success("Inbound rule updated successfully")
+    //   alert("Inbound rule updated successfully")
+    // } else {
+    //   setError("root", {
+    //     message: res.message
+    //   })
+    //   toast.error(res.message)
+    // }
   }
 
   const [deleteInboundRuleState, setDeleteInboundRule] = useState({
@@ -114,7 +112,6 @@ function InboundRulesRow({
 
   return (
     <TableRow>
-      <TableCell>{ConfigData.config_name}</TableCell>
       <TableCell>{ConfigData.domain_name}</TableCell>
       <TableCell>{ConfigData.protocol}</TableCell>
       <TableCell>{ConfigData.container_ip}</TableCell>
@@ -153,14 +150,6 @@ function InboundRulesRow({
                   </TableHeader>
                   <TableBody>
                     <TableRow className="hover:bg-transparent">
-                      <TableCell className="space-y-2">
-                        <Input {...register("config_name")} />
-                        {errors.config_name && (
-                          <div className="text-red-600">
-                            {errors.config_name.message}
-                          </div>
-                        )}
-                      </TableCell>
                       <TableCell>
                         <Input {...register("domain_name")} />
                       </TableCell>

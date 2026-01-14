@@ -1,20 +1,27 @@
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth"
 import { ConsoleOptions, ConsoleContainers } from "./ConsoleHomeComponents"
 import prisma from "@/lib/db"
+import { headers } from "next/headers"
+import { permanentRedirect } from "next/navigation"
 
 async function ConsolePage() {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
+  if (!session) {
+    permanentRedirect("/auth/login")
+  }
   const user = await prisma.user.findUnique({
     where: {
       email: session?.user?.email as string
     },
     include: {
-      UserData: {
+      userData: {
         select: {
-          vpc: {
+          Vpc: {
             select: {
               id: true,
-              vpc_name: true
+              vpcName: true
             }
           }
         }
@@ -24,13 +31,13 @@ async function ConsolePage() {
 
   return (
     <>
-      <div className="2xl:max-w-screen-2xl xl:max-w-screen-xl lg:max-w-screen-lg md:space-y-6 space-y-2 md:m-auto mx-2">
+      <div className="2xl:max-w-(--breakpoint-2xl) xl:max-w-(--breakpoint-xl) lg:max-w-(--breakpoint-lg) md:space-y-6 space-y-2 md:m-auto mx-2">
         <div className="text-2xl md:text-4xl font-bold md:mt-4 mt-2">
           Console Home
         </div>
         <div className="md:grid grid-cols-2 gap-4">
           <ConsoleOptions />
-          <ConsoleContainers vpcs={user?.UserData?.vpc} />
+          <ConsoleContainers vpcs={user?.userData?.Vpc} />
         </div>
       </div>
     </>

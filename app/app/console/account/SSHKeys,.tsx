@@ -10,7 +10,6 @@ import {
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import CreateNewSSHKeys from "./CreateNewSSHKEY"
-import { UseOwnSSHKeys } from "./ImportSSHKeys"
 function AddSSHKeys() {
   return (
     <Sheet>
@@ -24,16 +23,12 @@ function AddSSHKeys() {
         <SheetHeader>
           <SheetTitle>SSH Key</SheetTitle>
         </SheetHeader>
-        <Tabs defaultValue="create" className="w-[400px]">
+        <Tabs defaultValue="create" className="w-[100%]">
           <TabsList>
             <TabsTrigger value="create">Create New</TabsTrigger>
-            <TabsTrigger value="use_own">import</TabsTrigger>
           </TabsList>
           <TabsContent value="create">
             <CreateNewSSHKeys />
-          </TabsContent>
-          <TabsContent value="use_own">
-            <UseOwnSSHKeys />
           </TabsContent>
         </Tabs>
       </SheetContent>

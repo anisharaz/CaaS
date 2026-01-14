@@ -1,7 +1,0 @@
-- name: Delete SSH authorized key file
-  hosts: "{{ dockerHostName }}"
-  gather_facts: false
-  tasks:
-    - name: Delete SSH authorized key file
-      ansible.builtin.shell: >
-        rm -rf /caas/ssh_keys/{{ userData_id }}/{{ container_name }}

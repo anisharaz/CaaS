@@ -224,6 +224,7 @@ const TextAnimate: FC<Props> = ({
                   <motion.span
                     aria-hidden="true"
                     key={index}
+                    // @ts-ignore
                     variants={child}
                     className="inline-block -mr-[0.01em]"
                   >
@@ -249,6 +250,7 @@ const TextAnimate: FC<Props> = ({
       {...props}
     >
       {letters.map((letter, index) => (
+        // @ts-ignore
         <motion.span key={index} variants={child}>
           {letter === " " ? "\u00A0" : letter}
         </motion.span>

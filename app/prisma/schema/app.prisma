@@ -1,0 +1,112 @@
+enum USER_TYPE {
+    FREE
+    PREMIUM
+}
+
+enum USER_STATE {
+    ACTIVE
+    NEW
+    SETTING_UP
+}
+
+model UserData {
+    id                 String              @id @default(cuid())
+    user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId             String              @unique
+    username           String?
+    userState          USER_STATE          @default(NEW)
+    Vpc                Vpc[]
+    InboundRules       InboundRules[]
+    containers         containers[]
+    SshKeys            SshKeys[]
+    user_type          USER_TYPE           @default(FREE)
+    incusProject       IncusProject?
+    resourcesAndLimits ResourcesAndLimits?
+}
+
+model IncusProject {
+    id         String   @id
+    name       String?
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    UserData   UserData @relation(fields: [UserDataId], references: [id])
+    UserDataId String   @unique
+}
+
+model Vpc {
+    id         String       @id
+    vpcName    String
+    createdAt  DateTime     @default(now())
+    updatedAt  DateTime     @updatedAt
+    containers containers[]
+    UserData   UserData     @relation(fields: [UserDataId], references: [id])
+    UserDataId String
+}
+
+enum CONTAINER_STATE {
+    RUNNING
+    STOPPED
+    PENDING
+    DELETING
+}
+
+model containers {
+    id           String                 @id
+    name         String
+    state        CONTAINER_STATE
+    createdAt    DateTime               @default(now())
+    updatedAt    DateTime               @updatedAt
+    Vpc          Vpc                    @relation(fields: [vpcId], references: [id], onDelete: Cascade)
+    vpcId        String
+    ipAddress    String?
+    InboundRules InboundRules[]
+    UserData     UserData               @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+    UserDataId   String
+    SshKeys      SshKeys                @relation(fields: [SshKeysId], references: [id])
+    SshKeysId    String
+    SshPort      SshProxyAvailablePorts @relation(fields: [SshPortId], references: [id])
+    SshPortId    String                 @unique
+}
+
+model InboundRules {
+    id                   String     @id
+    domain_name          String     @unique
+    service_protocol     String
+    container_ip         String
+    port                 Int
+    createdAt            DateTime   @default(now())
+    updatedAt            DateTime   @updatedAt
+    UserData             UserData   @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+    UserDataId           String
+    containers           containers @relation(fields: [containersId], references: [id], onDelete: Cascade)
+    containersId         String
+    cloudflare_zone      String
+    cloudflare_record_id String
+}
+
+model SshProxyAvailablePorts {
+    id           String      @id
+    sshProxyPort Int
+    used         Boolean
+    containers   containers?
+}
+
+model SshKeys {
+    id         String       @id
+    name       String
+    publicKey  String
+    privateKey String
+    createdAt  DateTime     @default(now())
+    updatedAt  DateTime     @updatedAt
+    UserData   UserData     @relation(fields: [UserDataId], references: [id], onDelete: Cascade)
+    UserDataId String
+    containers containers[]
+}
+
+model ResourcesAndLimits {
+    id             String   @id @default(cuid())
+    userData       UserData @relation(fields: [userDataId], references: [id], onDelete: Cascade)
+    userDataId     String   @unique
+    container      Int      @default(0)
+    containerLimit Int      @default(2)
+}

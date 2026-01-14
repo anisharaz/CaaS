@@ -8,31 +8,29 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart"
-import { ContainerMetricsContext } from "@/context/ContainerMetricsContext"
 
 export function CpuUsesChart() {
-  const MetrcsData = useContext(ContainerMetricsContext)
   const [cpuUses, setCpuUses] = useState<
     {
       CpuUsesPercent: number
     }[]
   >([])
-  useEffect(() => {
-    setCpuUses((prev) => {
-      if (prev.length < 30) {
-        return [
-          ...prev,
-          {
-            CpuUsesPercent: MetrcsData.cpuUsesPercentage
-          }
-        ]
-      } else {
-        const array = prev.slice(1)
-        array.push({ CpuUsesPercent: MetrcsData.cpuUsesPercentage })
-        return array
-      }
-    })
-  }, [MetrcsData])
+  // useEffect(() => {
+  //   setCpuUses((prev) => {
+  //     if (prev.length < 30) {
+  //       return [
+  //         ...prev,
+  //         {
+  //           CpuUsesPercent: 0
+  //         }
+  //       ]
+  //     } else {
+  //       const array = prev.slice(1)
+  //       array.push({ CpuUsesPercent: 0 })
+  //       return array
+  //     }
+  //   })
+  // }, [])
 
   return (
     <Card className="w-full ">
