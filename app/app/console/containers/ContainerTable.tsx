@@ -68,13 +68,20 @@ function ContainerTable({
         const data = res.data
         setContainer(data)
       }
-      toast.success("Containers fetched")
       setVpcFetchLoading(false)
     }
     getContainers().then(() => {
       console.log("Containers fetched")
     })
   }, [vpc, triggetFetch])
+
+  // Auto-refresh every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTriggerFetch((prev) => !prev)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
   return (
     <>
       <div className="flex gap-2 items-center">

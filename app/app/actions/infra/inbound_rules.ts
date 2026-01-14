@@ -97,99 +97,58 @@ export async function createInboundRule({
     })
 
     // Task 3: Create Inbound rule on the node
-    // use caddy api
+    //  TODO: use caddy api
+    // async function addTcpForward({
+    //   adminUrl, // e.g. "https://caddy_host:2020"
+    //   serverName, // e.g. "tcp_2222"
+    //   listenPort, // e.g. 2222
+    //   targetIp, // e.g. "10.22.0.12"
+    //   targetPort // e.g. 22
+    // }: {
+    //   adminUrl: string
+    //   serverName: string
+    //   listenPort: number
+    //   targetIp: string
+    //   targetPort: number
+    // }) {
+    //   const payload = {
+    //     [serverName]: {
+    //       listen: [`:${listenPort}`],
+    //       routes: [
+    //         {
+    //           handle: [
+    //             {
+    //               handler: "proxy",
+    //               upstreams: [
+    //                 {
+    //                   dial: [`${targetIp}:${targetPort}`]
+    //                 }
+    //               ]
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     }
+    //   }
+
+    //   const res = await fetch(`${adminUrl}/config/apps/layer4/servers`, {
+    //     method: "PATCH",
+    //     headers: {
+    //       "Content-Type": "application/json"
+    //     },
+    //     body: JSON.stringify(payload)
+    //   })
+
+    //   if (!res.ok) {
+    //     const text = await res.text()
+    //     throw new Error(`Caddy API error: ${text}`)
+    //   }
+
+    //   return res.json()
+    // }
 
     // Revalidate cache made by nextjs
     revalidatePath("/console/containers/[container_id]")
-
-    return {
-      success: true,
-      message: ""
-    }
-
-    // eslint-disable-next-line
-  } catch (error: any) {
-    console.log(error)
-    return {
-      success: false,
-      message: error.message
-    }
-  }
-}
-
-export async function editInboundRule({
-  config_name,
-  domain_name,
-  container_port,
-  inbound_rule_id
-}: {
-  config_name: string
-  domain_name: string
-  container_port: number
-  inbound_rule_id: string
-}) {
-  const session = await auth.api.getSession({
-    header: await headers()
-  })
-  try {
-    const validation = inbound_rules_schema.safeParse({
-      config_name,
-      domain_name,
-      port: container_port
-    })
-    if (!validation.success) {
-      throw new Error("Validation failed")
-    }
-
-    const user = await prisma.user.findUnique({
-      where: {
-        email: session?.user?.email as string
-      },
-      include: {
-        userData: true
-      }
-    })
-
-    const inbound_rule = await prisma.inboundRules.findUnique({
-      where: {
-        id: inbound_rule_id,
-        UserDataId: user?.userData?.id as string
-      }
-    })
-
-    if (!inbound_rule) {
-      throw new Error("Inbound rule not found")
-    }
-
-    // Task 1: Edit inbound rule on node
-    // use caddy api
-
-    // Task 2: Update DNS record
-    const update_dns_record = await CfClient.dns.records.update(
-      inbound_rule.cloudflare_record_id,
-      {
-        type: "A",
-        zone_id: inbound_rule.cloudflare_zone,
-        name: domain_name,
-        content: process.env.ORACLE_NODE_IP as string,
-        proxied: true,
-        comment: user?.userData?.id as string,
-        ttl: 300
-      }
-    )
-
-    // Task 3: Update inbound rule in database
-    await prisma.inboundRules.update({
-      where: {
-        id: inbound_rule_id,
-        UserDataId: user?.userData?.id as string
-      },
-      data: {
-        domain_name,
-        port: container_port,
-        cloudflare_record_id: update_dns_record.id
-      }
-    })
 
     return {
       success: true,

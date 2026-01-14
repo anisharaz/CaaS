@@ -52,6 +52,11 @@ export async function initializeUser({ username }: { username: string }) {
           UserDataId: ud.id
         }
       })
+      await tx.resourcesAndLimits.create({
+        data: {
+          userDataId: ud.id
+        }
+      })
     })
 
     return {

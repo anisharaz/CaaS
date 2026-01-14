@@ -47,6 +47,7 @@ enum CONTAINER_STATE {
     RUNNING
     STOPPED
     PENDING
+    DELETING
 }
 
 model containers {

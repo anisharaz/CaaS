@@ -33,7 +33,7 @@ import { SubmitHandler, useForm } from "react-hook-form"
 import { inbound_rules_schema } from "@/lib/zod"
 import { z } from "zod"
 import { useState } from "react"
-import { deleteInboundRule, editInboundRule } from "@/app/actions/infra"
+import { deleteInboundRule } from "@/app/actions/infra"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 

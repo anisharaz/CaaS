@@ -27,6 +27,7 @@ import { AddInboundRule } from "./AddInboundRule"
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { deleteContainer } from "@/app/actions/infra/container_actions"
 
 function ContainerDetailTabs({
   container_name,
@@ -55,56 +56,20 @@ function ContainerDetailTabs({
     stop: false,
     delete: false
   })
-  async function StartContainer() {
-    // if (Object.values(loading).includes(true)) {
-    //   alert("Please wait for the previous action to complete")
-    // } else {
-    //   setLoading((prev) => ({ ...prev, start: true }))
-    //   const res = await startContainer({
-    //     container_name: container_name
-    //   })
-    //   if (res.success) {
-    //     toast.success("Container started successfully", {})
-    //   } else {
-    //     toast.error("Failed to start container", {})
-    //   }
-    //   setLoading((prev) => ({ ...prev, start: false }))
-    // }
-  }
 
-  async function StopContainer() {
-    // if (Object.values(loading).includes(true)) {
-    //   alert("Please wait for the previous action to complete")
-    // } else {
-    //   setLoading((prev) => ({ ...prev, stop: true }))
-    //   const res = await stopContainer({
-    //     container_name: container_name
-    //   })
-    //   if (res.success) {
-    //     toast.success("Container stopped successfully", {})
-    //   } else {
-    //     toast.error("Failed to stop container", {})
-    //   }
-    //   setLoading((prev) => ({ ...prev, stop: false }))
-    // }
-  }
   async function DeleteContainer() {
-    // if (Object.values(loading).includes(true)) {
-    //   alert("Please wait for the previous action to complete")
-    // } else {
-    //   setDeleteContainerError("")
-    //   setLoading((prev) => ({ ...prev, delete: true }))
-    //   const res = await deleteContainer({
-    //     container_name: container_name
-    //   })
-    //   if (res.success) {
-    //     toast.success("Container deleted successfully", {})
-    //     router.push("/console/containers")
-    //   } else {
-    //     setDeleteContainerError(res.message)
-    //   }
-    //   setLoading((prev) => ({ ...prev, delete: false }))
-    // }
+    setDeleteContainerError("")
+    setLoading((prev) => ({ ...prev, delete: true }))
+    const res = await deleteContainer({
+      containerId: params.container_id
+    })
+    if (res.success) {
+      toast.success("Container scheduled for deletion", {})
+      router.push("/console/containers")
+    } else {
+      setDeleteContainerError(res.message)
+    }
+    setLoading((prev) => ({ ...prev, delete: false }))
   }
 
   return (
@@ -116,32 +81,6 @@ function ContainerDetailTabs({
       <TabsContent value="details" className="w-full space-y-4 px-2 pt-2">
         <div className="text-2xl font-bold">Actions</div>
         <div className="flex flex-wrap gap-y-8 gap-4 p-5 md:p-4 justify-between rounded-xl border-2 md:gap-14 md:px-4 lg:items-center md:w-fit bg-gray-100 text-black dark:bg-zinc-900 dark:text-white">
-          <div
-            className="flex gap-2 cursor-pointer group hover:text-green-600"
-            onClick={StartContainer}
-          >
-            {loading.start ? (
-              <Loader2 className="animate-spin m-auto" />
-            ) : (
-              <>
-                <span>Start</span>
-                <Play />
-              </>
-            )}
-          </div>
-          <div
-            className="flex gap-2 cursor-pointer hover:text-amber-600"
-            onClick={StopContainer}
-          >
-            {loading.stop ? (
-              <Loader2 className="animate-spin m-auto" />
-            ) : (
-              <>
-                <span>Stop</span>
-                <Pause />
-              </>
-            )}
-          </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <div className="flex gap-2 cursor-pointer hover:text-red-500">
