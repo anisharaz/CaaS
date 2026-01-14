@@ -16,7 +16,7 @@ importers:
         version: 3.967.0
       '@hookform/resolvers':
         specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.70.0(react@19.2.3))
+        version: 5.2.2(react-hook-form@7.66.1(react@19.2.3))
       '@prisma/adapter-pg':
         specifier: ^7.2.0
         version: 7.2.0
@@ -108,8 +108,8 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(react@19.2.3)
       react-hook-form:
-        specifier: ^7.70.0
-        version: 7.70.0(react@19.2.3)
+        specifier: 7.66.1
+        version: 7.66.1(react@19.2.3)
       recharts:
         specifier: 2.15.4
         version: 2.15.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -3190,8 +3190,8 @@ packages:
     peerDependencies:
       react: ^19.2.3
 
-  react-hook-form@7.70.0:
-    resolution: {integrity: sha512-COOMajS4FI3Wuwrs3GPpi/Jeef/5W1DRR84Yl5/ShlT3dKVFUfoGiEZ/QE6Uw8P4T2/CLJdcTVYKvWBMQTEpvw==}
+  react-hook-form@7.66.1:
+    resolution: {integrity: sha512-2KnjpgG2Rhbi+CIiIBQQ9Df6sMGH5ExNyFl4Hw9qO7pIqMBR8Bvu9RQyjl3JM4vehzCh9soiNUM/xYMswb2EiA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -4314,10 +4314,10 @@ snapshots:
     dependencies:
       hono: 4.10.6
 
-  '@hookform/resolvers@5.2.2(react-hook-form@7.70.0(react@19.2.3))':
+  '@hookform/resolvers@5.2.2(react-hook-form@7.66.1(react@19.2.3))':
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.70.0(react@19.2.3)
+      react-hook-form: 7.66.1(react@19.2.3)
 
   '@humanfs/core@0.19.1': {}
 
@@ -7150,7 +7150,7 @@ snapshots:
       react: 19.2.3
       scheduler: 0.27.0
 
-  react-hook-form@7.70.0(react@19.2.3):
+  react-hook-form@7.66.1(react@19.2.3):
     dependencies:
       react: 19.2.3
 
