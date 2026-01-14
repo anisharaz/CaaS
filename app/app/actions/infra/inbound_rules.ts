@@ -19,7 +19,7 @@ export async function createInboundRule({
   container_id: string
 }) {
   const session = await auth.api.getSession({
-    header: await headers()
+    headers: await headers()
   })
   try {
     const validation = inbound_rules_schema.safeParse({
@@ -171,7 +171,7 @@ export async function deleteInboundRule({
   inbound_rule_id: string
 }) {
   const session = await auth.api.getSession({
-    header: await headers()
+    headers: await headers()
   })
   try {
     const user = await prisma.user.findUnique({
