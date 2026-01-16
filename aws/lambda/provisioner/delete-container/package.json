@@ -15,6 +15,7 @@
     "@types/pg": "^8.16.0"
   },
   "dependencies": {
+    "@aws-sdk/client-scheduler": "^3.970.0",
     "axios": "^1.13.2",
     "pg": "^8.16.3"
   }

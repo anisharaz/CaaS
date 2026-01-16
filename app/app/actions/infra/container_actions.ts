@@ -150,7 +150,8 @@ export async function deleteContainer({
     sshProxyAvailablePortsId: res?.SshPort?.id as string,
     containerId: containerId,
     resourcesAndLimitsId: res?.UserData?.resourcesAndLimits?.id as string,
-    incusProjectId: res?.UserData?.incusProject?.id as string
+    incusProjectId: res?.UserData?.incusProject?.id as string,
+    fromAutoDeleteScheduler: false
   }
 
   const params = {

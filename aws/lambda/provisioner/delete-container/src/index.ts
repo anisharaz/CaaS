@@ -2,6 +2,10 @@ import { SQSEvent } from "aws-lambda";
 import { Client } from "pg";
 import axios from "axios";
 import * as https from "https";
+import {
+  DeleteScheduleCommand,
+  SchedulerClient,
+} from "@aws-sdk/client-scheduler";
 export const handler = async (event: SQSEvent) => {
   const body: {
     action: string;
@@ -9,6 +13,7 @@ export const handler = async (event: SQSEvent) => {
     containerId: string;
     resourcesAndLimitsId: string;
     incusProjectId: string;
+    fromAutoDeleteScheduler: boolean;
   } = JSON.parse(event.Records[0].body);
   console.log(body);
 
@@ -48,6 +53,17 @@ export const handler = async (event: SQSEvent) => {
   );
 
   if (res.data.status_code == 100) {
+    // No need to delete if the command is from scheduler because schedular auto-delete itself
+    if (!body.fromAutoDeleteScheduler) {
+      const schedulerClient = new SchedulerClient({ region: "us-east-1" });
+      const command = new DeleteScheduleCommand({
+        Name: `ct-id-${body.containerId}`,
+        GroupName: "default",
+      });
+
+      await schedulerClient.send(command);
+    }
+
     const client = new Client({
       connectionString: process.env.DATABASE_URL,
     });

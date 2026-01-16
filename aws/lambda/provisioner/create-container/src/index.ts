@@ -214,6 +214,7 @@ export const handler = async (event: SQSEvent) => {
               containerId: body.container.id,
               resourcesAndLimitsId: resourcesAndLimitsId,
               incusProjectId: body.project,
+              fromAutoDeleteScheduler: true,
             }),
           },
         ],
