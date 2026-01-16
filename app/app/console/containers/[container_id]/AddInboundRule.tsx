@@ -30,23 +30,26 @@ export function AddInboundRule({ container_name }: { container_name: string }) {
     formState: { isSubmitting, isValid, errors }
   } = useForm<AddInboundRuleSchema>({
     resolver: zodResolver(add_inbound_rule_schema),
-    mode: "onBlur"
+    mode: "onBlur",
+    defaultValues: {
+      port: 80
+    }
   })
   const onSubmit: SubmitHandler<AddInboundRuleSchema> = async (FormData) => {
-    // const res = await createInboundRule({
-    //   config_name: FormData.rule_name,
-    //   domain_name: FormData.domain_name,
-    //   container_port: FormData.port,
-    //   container_name: container_name
-    // })
-    // if (res.success) {
-    //   router.refresh()
-    //   toast.success("Inbound rule added successfully")
-    //   reset()
-    //   alert("Inbound rule added successfully")
-    // } else {
-    //   toast.error(res.message)
-    // }
+    const res = await createInboundRule({
+      config_name: FormData.rule_name,
+      domainName: FormData.domainName,
+      container_port: FormData.port,
+      containerId: container_name
+    })
+    if (res.success) {
+      router.refresh()
+      toast.success("Inbound rule added successfully")
+      reset()
+      alert("Inbound rule added successfully")
+    } else {
+      toast.error(res.message)
+    }
   }
 
   return (
@@ -56,7 +59,7 @@ export function AddInboundRule({ container_name }: { container_name: string }) {
           Add
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[90vw]">
+      <SheetContent className="w-full sm:w-[50vw]">
         <form onSubmit={handleSubmit(onSubmit)}>
           <SheetHeader>
             <SheetTitle>Add Inbound Rule</SheetTitle>
@@ -83,18 +86,18 @@ export function AddInboundRule({ container_name }: { container_name: string }) {
             </div>
             <div className="space-y-2">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="domain_name" className="text-right text-base">
+                <Label htmlFor="domainName" className="text-right text-base">
                   Domain Name <span className="text-red-600">*</span>
                 </Label>
                 <div className="col-span-3 flex gap-2 items-center">
-                  <Input id="domain_name" {...register("domain_name")} />
-                  <span className="text-lg">.opendev.me</span>
+                  <Input id="domainName" {...register("domainName")} />
+                  <span className="text-lg">.anisharaz.com.np</span>
                 </div>
               </div>
               <div
-                className={`text-right ${errors.domain_name && "text-red-500"}`}
+                className={`text-right ${errors.domainName && "text-red-500"}`}
               >
-                {errors.domain_name?.message}
+                {errors.domainName?.message}
               </div>
             </div>
             <div className="space-y-2">

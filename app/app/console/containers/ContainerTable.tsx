@@ -178,7 +178,16 @@ function ContainerTable({
                           </DialogDescription>
                         </DialogHeader>
                         <div className="md:text-xl font-bold">
-                          1. changing permission of the key file
+                          1. Download ssh key from{" "}
+                          <Link
+                            className="text-blue-500 underline"
+                            href={"/console/account"}
+                          >
+                            HERE
+                          </Link>
+                        </div>
+                        <div className="md:text-xl font-bold">
+                          2. changing permission of the key file
                         </div>
                         <div className="flex justify-between md:gap-6 items-center bg-black text-white md:p-4 p-2 rounded-lg font-mono text-sm dark:bg-zinc-900">
                           <pre>
@@ -195,12 +204,12 @@ function ContainerTable({
                           />
                         </div>
                         <div className="md:text-xl font-bold">
-                          2. SSH into the container
+                          3. SSH into the container
                         </div>
                         <div className="flex justify-between md:gap-6 items-center bg-black text-white md:p-4 p-2 rounded-lg font-mono text-sm dark:bg-zinc-900">
                           <pre>
                             <code className="text-wrap">
-                              ssh root@
+                              ssh ubuntu@
                               {
                                 new URL(
                                   process.env.NEXT_PUBLIC_INCUS_HOST as string
@@ -213,7 +222,7 @@ function ContainerTable({
                             className="cursor-pointer w-6 md:w-6"
                             onClick={() => {
                               navigator.clipboard.writeText(
-                                `ssh root@${new URL(process.env.NEXT_PUBLIC_INCUS_HOST as string).hostname} -p ${detail.ssh_port} path/to/your/keyfile.pem`
+                                `ssh ubuntu@${new URL(process.env.NEXT_PUBLIC_INCUS_HOST as string).hostname} -p ${detail.ssh_port} path/to/your/keyfile.pem`
                               )
                               toast.success("Copied")
                             }}

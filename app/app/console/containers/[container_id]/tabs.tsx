@@ -42,9 +42,7 @@ function ContainerDetailTabs({
   createdAt: Date
   inbound_rules: {
     id: string
-    domain_name: string
-    protocol: string
-    container_ip: string
+    domainName: string
     port: number
   }[]
 }) {
@@ -142,14 +140,12 @@ function ContainerDetailTabs({
           <h1 className="text-2xl font-bold ">Inbound Rules</h1>
           <AddInboundRule container_name={container_name} />
         </div>
-        <div className="max-h-[400px] max-w-[90vw] overflow-auto">
+        <div className="max-h-100 max-w-[90vw] overflow-auto">
           <Table>
             <TableHeader className="dark:bg-zinc-800 bg-muted">
               <TableRow className="text-md font-extrabold">
                 <TableHead>Rule Name</TableHead>
                 <TableHead>Domain Name</TableHead>
-                <TableHead>Service Protocol</TableHead>
-                <TableHead>Container IP</TableHead>
                 <TableHead>Container Port</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -167,9 +163,7 @@ function ContainerDetailTabs({
                   key={index}
                   ConfigData={{
                     id: config.id,
-                    domain_name: config.domain_name,
-                    protocol: config.protocol,
-                    container_ip: config.container_ip,
+                    domainName: config.domainName,
                     port: config.port
                   }}
                 />
