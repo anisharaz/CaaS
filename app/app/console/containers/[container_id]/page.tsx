@@ -20,9 +20,7 @@ async function ContainerDetail({
       InboundRules: {
         select: {
           id: true,
-          domain_name: true,
-          service_protocol: true,
-          container_ip: true,
+          domainName: true,
           port: true
         }
       }
@@ -31,9 +29,7 @@ async function ContainerDetail({
   const inbound_rules = container?.InboundRules.map((rule) => {
     return {
       id: rule.id,
-      domain_name: rule.domain_name,
-      protocol: rule.service_protocol,
-      container_ip: rule.container_ip,
+      domainName: rule.domainName,
       port: rule.port
     }
   })

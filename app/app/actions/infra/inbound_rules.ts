@@ -8,23 +8,22 @@ import { headers } from "next/headers"
 import { nanoid } from "nanoid"
 
 export async function createInboundRule({
-  domain_name,
+  domainName,
   container_port,
   config_name,
-  container_id
+  containerId
 }: {
-  domain_name: string
+  domainName: string
   container_port: number
   config_name: string
-  container_id: string
+  containerId: string
 }) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
   try {
     const validation = inbound_rules_schema.safeParse({
-      config_name: config_name,
-      domain_name: domain_name,
+      domainName: domainName,
       port: container_port
     })
 
@@ -43,7 +42,7 @@ export async function createInboundRule({
 
     const container = await prisma.containers.findUnique({
       where: {
-        id: container_id
+        id: containerId
       }
     })
 
@@ -53,7 +52,7 @@ export async function createInboundRule({
 
     const doesDomainAlreadyExists = await prisma.inboundRules.findUnique({
       where: {
-        domain_name: domain_name
+        domainName: domainName
       }
     })
 
@@ -61,38 +60,41 @@ export async function createInboundRule({
       throw new Error("Domain already in use")
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let create_dns: any = null
-
-    if (process.env.MODE === "prod") {
-      // Task 1: Create DNS record
-      create_dns = await CfClient.dns.records.create({
-        type: "A",
-        zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
-        name: domain_name,
-        content: process.env.ORACLE_NODE_IP as string,
-        proxied: true,
-        comment: user?.id as string,
-        ttl: 300
-      })
-
-      if (!create_dns) {
-        throw new Error("Failed to create DNS record")
+    const resCloudflare = await CfClient.dns.records.list({
+      zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
+      name: {
+        startswith: "test"
       }
+    })
+
+    if (resCloudflare.result.length > 0) {
+      throw new Error("Domain not available")
+    }
+
+    const create_dns = await CfClient.dns.records.create({
+      type: "A",
+      zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
+      name: domainName,
+      content: new URL(process.env.NEXT_PUBLIC_INCUS_HOST as string).hostname,
+      proxied: true,
+      comment: user?.id as string,
+      ttl: 300
+    })
+
+    if (!create_dns) {
+      throw new Error("Failed to create DNS record")
     }
 
     // Task 2: Create Inbound rule in database
-    const res = await prisma.inboundRules.create({
+    await prisma.inboundRules.create({
       data: {
         id: nanoid(),
-        domain_name: domain_name,
-        service_protocol: "http",
-        container_ip: container?.ipAddress as string,
+        domainName: domainName,
         port: container_port,
         UserDataId: user?.userData?.id as string,
         containersId: container?.id as string,
-        cloudflare_record_id: create_dns.id as string,
-        cloudflare_zone: process.env.CLOUDFLARE_ZONE_ID as string
+        cloudflareRecordId: create_dns.id,
+        name: config_name
       }
     })
 
@@ -196,7 +198,7 @@ export async function deleteInboundRule({
     // use caddy api
 
     // Task 2: Delete DNS record in cloudflare
-    await CfClient.dns.records.delete(rule.cloudflare_record_id, {
+    await CfClient.dns.records.delete(rule.cloudflareRecordId, {
       zone_id: process.env.CLOUDFLARE_ZONE_ID as string
     })
 

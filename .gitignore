@@ -7,3 +7,4 @@ tsconfig.tsbuildinfo
 .env.local
 .env
 caas_pvenv
+img.zip

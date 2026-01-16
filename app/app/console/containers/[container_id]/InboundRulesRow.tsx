@@ -42,9 +42,7 @@ function InboundRulesRow({
 }: {
   ConfigData: {
     id: string
-    domain_name: string
-    protocol: string
-    container_ip: string
+    domainName: string
     port: number
   }
 }) {
@@ -59,7 +57,7 @@ function InboundRulesRow({
     resolver: zodResolver(inbound_rules_schema),
     mode: "onChange",
     defaultValues: {
-      domain_name: ConfigData.domain_name,
+      domainName: ConfigData.domainName,
       port: ConfigData.port
     }
   })
@@ -112,9 +110,7 @@ function InboundRulesRow({
 
   return (
     <TableRow>
-      <TableCell>{ConfigData.domain_name}</TableCell>
-      <TableCell>{ConfigData.protocol}</TableCell>
-      <TableCell>{ConfigData.container_ip}</TableCell>
+      <TableCell>{ConfigData.domainName}</TableCell>
       <TableCell>{ConfigData.port}</TableCell>
       <TableCell>
         <div className="flex gap-4">
@@ -140,10 +136,6 @@ function InboundRulesRow({
                         Domain Name <sub>(edit)</sub>
                       </TableHead>
                       <TableHead className="min-w-60">
-                        Service Protocol
-                      </TableHead>
-                      <TableHead className="min-w-60">Container IP</TableHead>
-                      <TableHead className="min-w-60">
                         Container Port <sub>(edit)</sub>
                       </TableHead>
                     </TableRow>
@@ -151,10 +143,8 @@ function InboundRulesRow({
                   <TableBody>
                     <TableRow className="hover:bg-transparent">
                       <TableCell>
-                        <Input {...register("domain_name")} />
+                        <Input {...register("domainName")} />
                       </TableCell>
-                      <TableCell>{ConfigData.protocol}</TableCell>
-                      <TableCell>{ConfigData.container_ip}</TableCell>
                       <TableCell className="space-y-2">
                         <Input {...register("port", { valueAsNumber: true })} />
                         {errors.port && (
