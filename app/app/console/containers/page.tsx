@@ -33,16 +33,6 @@ async function ContainersPage() {
     }
   })
 
-  const user_vpc = await prisma.vpc.findMany({
-    where: {
-      UserDataId: user?.userData?.id
-    },
-    select: {
-      id: true,
-      vpcName: true
-    }
-  })
-
   return (
     <div
       style={{ height: "calc(100vh - 65px)" }}
@@ -66,7 +56,7 @@ async function ContainersPage() {
         </div>
       </div>
       <div className="md:p-6 p-2 space-y-4 border-2 rounded-xl">
-        <ContainerTable vpcs={user_vpc} />
+        <ContainerTable vpcs={user?.userData?.Vpc} />
       </div>
     </div>
   )

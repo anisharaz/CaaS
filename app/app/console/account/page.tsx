@@ -1,4 +1,3 @@
-import { TriangleAlert } from "lucide-react"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/db"
 
@@ -14,7 +13,7 @@ import DeleteSSHKey from "./DeleteSSHKey"
 import AddSSHKeys from "./SSHKeys,"
 import DownloadSSHKeys from "./DownloadSSHKey"
 import { headers } from "next/headers"
-import { Button } from "@/components/ui/button"
+import LogoutButton from "@/components/logout-button"
 
 async function Profile() {
   const session = await auth.api.getSession({
@@ -38,7 +37,7 @@ async function Profile() {
       <div className="md:space-y-4 space-y-2">
         <div className="flex justify-between">
           <div className="text-2xl font-bold text-amber-500">Account</div>
-          <Button>Logout</Button>
+          <LogoutButton />
         </div>
         <div className="md:p-6 p-3 rounded-xl border-2 space-y-4 flex flex-col">
           <div className="md:grid md:space-x-10 grid-cols-2 flex flex-col md:gap-4 gap-2">
