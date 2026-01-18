@@ -17,6 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-scheduler": "^3.970.0",
     "axios": "^1.13.2",
+    "cloudflare": "^5.2.0",
     "pg": "^8.16.3"
   }
 }
