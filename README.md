@@ -2,17 +2,10 @@
 
 This project is build with an aim to replace VMs with containers in a cloud environment. Instead of provisioning a compute instance using VMs, this proof-of-concept uses container technology for compute instance. Additionally, the project focuses on delivering a user-friendly and intuitive experience for its users.
 
-## Technologies Used
+## New Architecture
+<img width="1527" height="995" alt="arch" src="https://github.com/user-attachments/assets/55a4218a-1870-4dc3-9f90-aa73aee8c87b" />
 
-- Python
-- Ansible
-- FastAPI
-- Nextjs
-- Shad-cn UI & Tailwind CSS
-- Websockets
-- Nginx
-- Docker
-- SSH Tunnels
+## Old architecture
   
 <br>
 
@@ -26,10 +19,4 @@ This project is build with an aim to replace VMs with containers in a cloud envi
 
 ![Untitled-2024-06-23-1246](https://github.com/user-attachments/assets/c0e8474f-9c31-48ed-8149-07a91edbf89c)
 
-
-> [!NOTE]
-> Setting Up the prject [GUIDE](https://caas.aaraz.me/documentation/projectsetup)
-
-> [!WARNING]
-> Full Documentation of this project is under development.
 
