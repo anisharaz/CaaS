@@ -3,12 +3,23 @@ import * as https from "https"
 import * as fs from "fs"
 const baseUrl = process.env.NEXT_PUBLIC_INCUS_HOST + "/1.0"
 
+const incusClientCrtBase64 = process.env.INCUS_HOST_CLIENT_CRT_BASE64
+const incusClientKeyBase64 = process.env.INCUS_HOST_CLIENT_KEY_BASE64
+
+// decode
+const incusClientCrt = Buffer.from(incusClientCrtBase64!, "base64").toString(
+  "utf-8"
+)
+const incusClientKey = Buffer.from(incusClientKeyBase64!, "base64").toString(
+  "utf-8"
+)
+
 // Create axios instance with SSL configuration
 const axiosInstance = axios.create({
   baseURL: baseUrl,
   httpsAgent: new https.Agent({
-    cert: fs.readFileSync("./lib/client.crt"),
-    key: fs.readFileSync("./lib/client.key"),
+    cert: incusClientCrt,
+    key: incusClientKey,
     rejectUnauthorized: false // Equivalent to verify=False
   })
 })

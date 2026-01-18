@@ -30,7 +30,7 @@ export function AddInboundRule({ container_name }: { container_name: string }) {
     formState: { isSubmitting, isValid, errors }
   } = useForm<AddInboundRuleSchema>({
     resolver: zodResolver(add_inbound_rule_schema),
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: {
       port: 80
     }
