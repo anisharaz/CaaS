@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth"
 import { CfClient } from "@/lib/cloudflare"
 import { headers } from "next/headers"
 import { nanoid } from "nanoid"
+import { addRoute, deleteRoute } from "@/lib/caddy"
 
 export async function createInboundRule({
   domainName,
@@ -61,21 +62,29 @@ export async function createInboundRule({
     }
 
     const resCloudflare = await CfClient.dns.records.list({
-      zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
+      zone_id: process.env.CLOUDFLARE_ZONE_ID!,
       name: {
-        startswith: "test"
+        startswith: domainName
       }
     })
 
     if (resCloudflare.result.length > 0) {
       throw new Error("Domain not available")
     }
+    const routeId = nanoid()
+
+    await addRoute({
+      domainName: domainName + process.env.NEXT_PUBLIC_CLOUDFLARE_ROOT_DOMAIN,
+      routeId: routeId,
+      upstreamHost: container.ipAddress as string,
+      upstreamPort: container_port
+    })
 
     const create_dns = await CfClient.dns.records.create({
       type: "A",
       zone_id: process.env.CLOUDFLARE_ZONE_ID as string,
       name: domainName,
-      content: new URL(process.env.NEXT_PUBLIC_INCUS_HOST as string).hostname,
+      content: process.env.INCUS_HOST_CADDY_PROXY_IP,
       proxied: true,
       comment: user?.id as string,
       ttl: 300
@@ -85,10 +94,9 @@ export async function createInboundRule({
       throw new Error("Failed to create DNS record")
     }
 
-    // Task 2: Create Inbound rule in database
     await prisma.inboundRules.create({
       data: {
-        id: nanoid(),
+        id: routeId,
         domainName: domainName,
         port: container_port,
         UserDataId: user?.userData?.id as string,
@@ -98,58 +106,6 @@ export async function createInboundRule({
       }
     })
 
-    // Task 3: Create Inbound rule on the node
-    //  TODO: use caddy api
-    // async function addTcpForward({
-    //   adminUrl, // e.g. "https://caddy_host:2020"
-    //   serverName, // e.g. "tcp_2222"
-    //   listenPort, // e.g. 2222
-    //   targetIp, // e.g. "10.22.0.12"
-    //   targetPort // e.g. 22
-    // }: {
-    //   adminUrl: string
-    //   serverName: string
-    //   listenPort: number
-    //   targetIp: string
-    //   targetPort: number
-    // }) {
-    //   const payload = {
-    //     [serverName]: {
-    //       listen: [`:${listenPort}`],
-    //       routes: [
-    //         {
-    //           handle: [
-    //             {
-    //               handler: "proxy",
-    //               upstreams: [
-    //                 {
-    //                   dial: [`${targetIp}:${targetPort}`]
-    //                 }
-    //               ]
-    //             }
-    //           ]
-    //         }
-    //       ]
-    //     }
-    //   }
-
-    //   const res = await fetch(`${adminUrl}/config/apps/layer4/servers`, {
-    //     method: "PATCH",
-    //     headers: {
-    //       "Content-Type": "application/json"
-    //     },
-    //     body: JSON.stringify(payload)
-    //   })
-
-    //   if (!res.ok) {
-    //     const text = await res.text()
-    //     throw new Error(`Caddy API error: ${text}`)
-    //   }
-
-    //   return res.json()
-    // }
-
-    // Revalidate cache made by nextjs
     revalidatePath("/console/containers/[container_id]")
 
     return {
@@ -194,8 +150,7 @@ export async function deleteInboundRule({
       throw new Error("Inbound rule not found")
     }
 
-    // Task 1: Delete inbound rule on node
-    // use caddy api
+    await deleteRoute(rule.id)
 
     // Task 2: Delete DNS record in cloudflare
     await CfClient.dns.records.delete(rule.cloudflareRecordId, {

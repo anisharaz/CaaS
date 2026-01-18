@@ -1,6 +1,4 @@
-import { TriangleAlert } from "lucide-react"
-import { CpuUsesChart } from "./Metricscharts/CpuUses"
-import { MemoryUsesChart } from "./Metricscharts/MemoryUses"
+import { notFound } from "next/navigation"
 import ContainerDetailTabs from "./tabs"
 import prisma from "@/lib/db"
 
@@ -21,16 +19,23 @@ async function ContainerDetail({
         select: {
           id: true,
           domainName: true,
-          port: true
+          port: true,
+          name: true
         }
       }
     }
   })
+
+  if (!container) {
+    notFound()
+  }
+
   const inbound_rules = container?.InboundRules.map((rule) => {
     return {
       id: rule.id,
       domainName: rule.domainName,
-      port: rule.port
+      port: rule.port,
+      ruleName: rule.name
     }
   })
   return (

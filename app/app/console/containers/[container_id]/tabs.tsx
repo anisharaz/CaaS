@@ -42,6 +42,7 @@ function ContainerDetailTabs({
   createdAt: Date
   inbound_rules: {
     id: string
+    ruleName: string
     domainName: string
     port: number
   }[]
@@ -164,7 +165,8 @@ function ContainerDetailTabs({
                   ConfigData={{
                     id: config.id,
                     domainName: config.domainName,
-                    port: config.port
+                    port: config.port,
+                    configName: config.ruleName
                   }}
                 />
               ))}

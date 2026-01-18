@@ -36,53 +36,19 @@ import { useState } from "react"
 import { deleteInboundRule } from "@/app/actions/infra"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import Link from "next/link"
 
 function InboundRulesRow({
   ConfigData
 }: {
   ConfigData: {
     id: string
+    configName: string
     domainName: string
     port: number
   }
 }) {
   const router = useRouter()
-  type Schema = z.infer<typeof inbound_rules_schema>
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { isSubmitting, errors }
-  } = useForm<Schema>({
-    resolver: zodResolver(inbound_rules_schema),
-    mode: "onChange",
-    defaultValues: {
-      domainName: ConfigData.domainName,
-      port: ConfigData.port
-    }
-  })
-
-  const onSubmit: SubmitHandler<Schema> = async (formData) => {
-    // setError("root", {
-    //   message: ""
-    // })
-    // const res = await editInboundRule({
-    //   config_name: formData.config_name,
-    //   domain_name: formData.domain_name,
-    //   container_port: formData.port,
-    //   inbound_rule_id: ConfigData.id
-    // })
-    // if (res.success) {
-    //   router.refresh()
-    //   toast.success("Inbound rule updated successfully")
-    //   alert("Inbound rule updated successfully")
-    // } else {
-    //   setError("root", {
-    //     message: res.message
-    //   })
-    //   toast.error(res.message)
-    // }
-  }
 
   const [deleteInboundRuleState, setDeleteInboundRule] = useState({
     loading: false,
@@ -110,75 +76,24 @@ function InboundRulesRow({
 
   return (
     <TableRow>
-      <TableCell>{ConfigData.domainName}</TableCell>
+      <TableCell>{ConfigData.configName}</TableCell>
+      <TableCell>
+        <Link
+          href={`https://${ConfigData.domainName + process.env.NEXT_PUBLIC_CLOUDFLARE_ROOT_DOMAIN}`}
+          target="_blank"
+          className="text-blue-500 hover:underline"
+        >
+          https://
+          {ConfigData.domainName +
+            process.env.NEXT_PUBLIC_CLOUDFLARE_ROOT_DOMAIN}
+        </Link>
+      </TableCell>
       <TableCell>{ConfigData.port}</TableCell>
       <TableCell>
         <div className="flex gap-4">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Edit className="cursor-pointer hover:text-blue-500" />
-            </DialogTrigger>
-            <DialogContent className="overflow-auto">
-              <DialogHeader>
-                <DialogTitle>Update Details</DialogTitle>
-              </DialogHeader>
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="overflow-x-auto"
-              >
-                <Table>
-                  <TableHeader>
-                    <TableRow className="text-md font-extrabold">
-                      <TableHead className="min-w-60">
-                        Rule Name <sub>(edit)</sub>
-                      </TableHead>
-                      <TableHead className="min-w-60">
-                        Domain Name <sub>(edit)</sub>
-                      </TableHead>
-                      <TableHead className="min-w-60">
-                        Container Port <sub>(edit)</sub>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow className="hover:bg-transparent">
-                      <TableCell>
-                        <Input {...register("domainName")} />
-                      </TableCell>
-                      <TableCell className="space-y-2">
-                        <Input {...register("port", { valueAsNumber: true })} />
-                        {errors.port && (
-                          <div className="text-red-600">
-                            {errors.port?.message}
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-                {errors.root && (
-                  <div className="text-right text-red-500 pb-2">
-                    {errors.root.message}
-                  </div>
-                )}
-                <DialogFooter>
-                  {isSubmitting ? (
-                    <Button disabled size={"lg"} className=" text-lg">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <div>Hold on..</div>
-                    </Button>
-                  ) : (
-                    <Button size={"lg"} className="text-lg" type="submit">
-                      Update
-                    </Button>
-                  )}
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
           <AlertDialog>
             <AlertDialogTrigger>
-              <Trash2 className="text-red-500 hover:text-red-600 cursor-pointer" />
+              <Trash2 className="text-red-500 hover:text-red-800 cursor-pointer" />
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
